@@ -18,16 +18,19 @@ import javafx.stage.WindowEvent;
 
 public class ClientGUI extends Application {
     HashMap<String, Scene> sceneMap, loginMap;
+    HashMap<String, Stage> chatMap;
+    HashMap<String ,ListView<String>> chatListMap;
     private TextField usernameField, messageField, loginField;
     private Button sendButton, playButton, howtoplay, signinButton, messageButton;
-    VBox clientList, loginVbox;
-    HBox userBox;
+    VBox clientList, loginVbox, chatVbox;
+    HBox userBox, messageBox;
     Client clientConnection;
     Label loginLabel, userLabel;
     String currentUser;
     BorderPane root;
     GridPane board;
-    ScrollPane userPane;
+    ScrollPane userPane, messagePane;
+    Stage chatbox;
 
     ListView<String> messagesList;
     public static void main(String[] args) {
@@ -57,10 +60,13 @@ public class ClientGUI extends Application {
                                 messageButton = new Button("Message");
                                 userBox = new HBox(userLabel, playButton, messageButton);
                                 clientList.getChildren().add(userBox);
+                                messageButton.setOnAction(e->{
+                                    Stage chatStage = chatsystem(username);
+                                    chatStage.show();
+                                });
                             }
                         }
                     if(!loginField.getText().isEmpty() && ((Message) data).getGroupMembers().contains(loginField.getText())){   //Check to see if username is taken
-                        currentUser = ((Message) data).getClient();     //If not switch scenes and thats your user
                         primaryStage.setScene(sceneMap.get("home"));
                         primaryStage.setTitle("Client");
                         primaryStage.show();
@@ -69,6 +75,11 @@ public class ClientGUI extends Application {
 
                 } else if (((Message) data).getMsgType().equals(Message.challenge)) {
 
+                } else if (((Message) data).getMsgType().equals(Message.sendToIndvidual)){
+                    String currReceiver = ((Message)data).getClient();
+                    Stage currChat = chatsystem(currReceiver);
+                    currChat.show();
+                    chatListMap.get(currReceiver).getItems().add( currReceiver + ": " + ((Message) data).getMessage());  //receiver side
                 }
             });
         });
@@ -84,6 +95,11 @@ public class ClientGUI extends Application {
 
         sceneMap = new HashMap<String, Scene>();
         sceneMap.put("home",  createHomeGUI());
+
+        chatMap = new HashMap<String, Stage>();
+
+        chatListMap = new HashMap<String, ListView<String>>();
+
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent t) {
@@ -96,7 +112,6 @@ public class ClientGUI extends Application {
     public Scene createHomeGUI(){
         root = new BorderPane();
         board = new GridPane();
-        //clientList = new VBox();
         for (int row = 0 ; row < 8; row++){
             for (int col = 0 ; col < 8; col++){
                 board.add(buildSquare(row,col),col,row);
@@ -108,6 +123,37 @@ public class ClientGUI extends Application {
         root.setLeft(board);
         root.setRight(userPane);
         return new Scene(root, 800, 600);
+    }
+
+    public Stage chatsystem(String target){
+
+        if(chatMap.containsKey(target)){        //Check to see if the message pop up already exists
+            return chatMap.get(target);         //Used a hashmap b/c we can see if a stage already exists for that specific chat
+        }
+
+        messagesList = new ListView<String>();
+        chatListMap.put(target,messagesList);      //ChatMap stores a window for each person that joins and messagelist stores each messagelist per person
+
+        chatbox = new Stage();      //used a stage so we can close out of the messaging system
+        messageField = new TextField();
+        messagePane = new ScrollPane(messagesList);
+        sendButton = new Button("Send");
+
+        messageBox = new HBox(10, messageField, sendButton);
+        chatVbox = new VBox(10, messagePane, messageBox);
+        chatVbox.setAlignment(Pos.CENTER);
+
+        chatbox.setScene(new Scene(chatVbox,400, 500));
+
+        sendButton.setOnAction(e->{
+            Message currMessage = new Message(Message.sendToIndvidual, messageField.getText(), currentUser, target);    //Creates the message to individual
+            clientConnection.send(currMessage);
+            chatListMap.get(target).getItems().add(currentUser + ": " + messageField.getText());     //Sender side
+
+        });
+
+        chatMap.put(target,chatbox); //Adds a entry to the hashmap
+        return chatbox;
     }
 
     public Scene loginGUI(){   //Login Scene
