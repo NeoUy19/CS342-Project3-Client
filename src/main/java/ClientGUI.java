@@ -15,6 +15,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class ClientGUI extends Application {
     HashMap<String, Scene> sceneMap, loginMap;
@@ -39,7 +41,6 @@ public class ClientGUI extends Application {
 
 
     public void start(Stage primaryStage) {
-
          clientConnection = new Client(data -> {    //Creating the new Client
             Platform.runLater(()-> {
                 if (((Message) data).getMsgType().equals(Message.error)) {          //Conditions for different server messages
@@ -157,10 +158,18 @@ public class ClientGUI extends Application {
     }
 
     public Scene loginGUI(){   //Login Scene
+        Image image = new Image(getClass().getResourceAsStream("/checkersTran.PNG"));
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(350);
+        imageView.setFitHeight(200);
+        imageView.setPreserveRatio(true);
+
         root = new BorderPane();
+        root.setStyle("-fx-background-color: #ffffff;"+"-fx-font-family: 'serif';");
 
         loginField = new TextField();
         signinButton = new Button("Sign in");
+        signinButton.setStyle("-fx-font-size: 24px;" + "-fx-font-weight: bold;" + "-fx-font-variant: small-caps;" + "-fx-background-color: #b61e2b;" + "-fx-text-fill: white;");
         loginLabel = new Label();
 
         signinButton.setOnAction(e->{
@@ -168,7 +177,8 @@ public class ClientGUI extends Application {
             clientConnection.send(userName);
         });
 
-        loginVbox = new VBox(10, loginField, signinButton, loginLabel);
+        loginVbox = new VBox(10, imageView,loginField, signinButton, loginLabel);
+        loginVbox.setStyle("-fx-background-color: #ffffff;"+"-fx-font-family: 'serif';");
         root.setCenter(loginVbox);
         loginVbox.setAlignment(Pos.CENTER);
         loginVbox.setMaxWidth(300);
