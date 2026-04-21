@@ -13,6 +13,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -71,11 +72,11 @@ public class ClientGUI extends Application {
                                 });
                             }
                         }
-                    if(!loginField.getText().isEmpty() && ((Message) data).getGroupMembers().contains(loginField.getText())){   //Check to see if username is taken
+                    if (primaryStage.getScene() == loginMap.get("login") && ((Message) data).getGroupMembers().contains(currentUser)) {
                         primaryStage.setScene(sceneMap.get("home"));
                         primaryStage.setTitle("Client");
                         primaryStage.show();
-                 }
+                    }
                 } else if (((Message) data).getMsgType().equals(Message.serverMessage)) {
 
                 } else if (((Message) data).getMsgType().equals(Message.challenge)) {
@@ -117,7 +118,7 @@ public class ClientGUI extends Application {
         primaryStage.show();
 
         sceneMap = new HashMap<String, Scene>();
-        sceneMap.put("home",  createHomeGUI());
+        sceneMap.put("home", createHomeGUI());
 
         chatMap = new HashMap<String, Stage>();
         chatListMap = new HashMap<String, ListView<String>>();
@@ -134,7 +135,7 @@ public class ClientGUI extends Application {
     public Scene createHomeGUI(){
         root = new BorderPane();
         board = new GridPane();
-        buildBoard();
+        board = buildBoard();
         clientList = new VBox();
         userPane = new ScrollPane(clientList);      //created a scroll pane and itll adjust accordingly
         userPane.setFitToWidth(true);
@@ -216,27 +217,6 @@ public class ClientGUI extends Application {
         root.setRight(chatBox);
         return new Scene(root,800,600);
     }
-    private StackPane buildSquare(int row, int col){
-        StackPane square = new StackPane();
-        Rectangle rectangle = new Rectangle(25,25);
-        if ((row+col)%2 == 0){
-            rectangle.setFill(Color.rgb(232,245,184));
-        }
-        else {
-            rectangle.setFill(Color.rgb(0,0,0));
-        }
-        square.getChildren().add(rectangle);
-        return square;
-    }
-    private GridPane buildBoard(){
-        GridPane board = new GridPane();
-        for (int row = 0 ; row < 8; row++){
-            for (int col = 0 ; col < 8; col++){
-                board.add(buildSquare(row,col),col,row);
-            }
-        }
-        return board;
-    }
 
     private VBox buildChatBox(String target){
         messagesList = new ListView<String>();
@@ -254,5 +234,44 @@ public class ClientGUI extends Application {
             chatListMap.get(target).getItems().add(currentUser + ": " + messageField.getText());     //Sender side
         });
         return chatVbox;
+    }
+    private StackPane buildSquare(int row, int col){
+        StackPane square = new StackPane();
+        Rectangle rectangle = new Rectangle(50,50);
+        if ((row+col)%2 == 0){
+            rectangle.setFill(Color.rgb(232,245,184));
+        }
+        else {
+            rectangle.setFill(Color.rgb(0,0,0));
+        }
+        square.getChildren().add(rectangle);
+        if ((row+col)%2 == 0) {
+            if (row < 3) {
+                square.getChildren().add(buildRedPiece());
+            } else if (row > 5) {
+                square.getChildren().add(buildBlackPiece());
+            }
+        }
+        return square;
+    }
+    private GridPane buildBoard(){
+        GridPane board = new GridPane();
+        for (int row = 0 ; row < 8; row++){
+            for (int col = 0 ; col < 8; col++){
+                board.add(buildSquare(row,col),col,row);
+            }
+        }
+        return board;
+    }
+    private Circle buildRedPiece(){
+        Circle redCircle = new Circle(25);
+        redCircle.setFill(Color.rgb(255,0,0));
+        return redCircle;
+    }
+
+    private Circle buildBlackPiece(){
+        Circle blackCircle = new Circle(25);
+        blackCircle.setFill(Color.rgb(0,0,0));
+        return blackCircle;
     }
 }
