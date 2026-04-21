@@ -201,6 +201,7 @@ public class ClientGUI extends Application {
         root.setStyle("-fx-background-color: #ffffff;"+"-fx-font-family: 'serif';");
 
         loginField = new TextField();
+        loginField.setPromptText("Enter your username");
         signinButton = new Button("Sign in");
         signinButton.setStyle("-fx-font-size: 24px;" + "-fx-font-weight: bold;" + "-fx-font-variant: small-caps;" + "-fx-background-color: #b61e2b;" + "-fx-text-fill: white;");
         loginLabel = new Label();
