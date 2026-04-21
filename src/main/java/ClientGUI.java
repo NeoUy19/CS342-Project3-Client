@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.Optional;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -23,7 +24,7 @@ public class ClientGUI extends Application {
     HashMap<String, Stage> chatMap;
     HashMap<String ,ListView<String>> chatListMap;
     private TextField usernameField, messageField, loginField;
-    private Button sendButton, playButton, howtoplay, signinButton, messageButton;
+    private Button sendButton, playButton, howtoplay, signinButton, messageButton, agreeChal, rejectChal;
     VBox clientList, loginVbox, chatVbox;
     HBox userBox, messageBox;
     Client clientConnection;
@@ -58,6 +59,9 @@ public class ClientGUI extends Application {
                                 userLabel = new Label();        //Displays current players with a play btn and message btn
                                 userLabel.setText(username);
                                 playButton = new Button("Play");
+                                playButton.setOnAction((event) -> {
+                                   clientConnection.send(new Message(Message.challenge, currentUser, username));
+                                });
                                 messageButton = new Button("Message");
                                 userBox = new HBox(userLabel, playButton, messageButton);
                                 clientList.getChildren().add(userBox);
@@ -75,13 +79,31 @@ public class ClientGUI extends Application {
                 } else if (((Message) data).getMsgType().equals(Message.serverMessage)) {
 
                 } else if (((Message) data).getMsgType().equals(Message.challenge)) {
+                    ButtonType ACCEPT =  new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
+                    ButtonType REJECT = new ButtonType("Reject", ButtonBar.ButtonData.CANCEL_CLOSE);
+                    Alert giveplayerChoice = new Alert(Alert.AlertType.CONFIRMATION);
+                    giveplayerChoice.setTitle("Game Challenge");
+                    giveplayerChoice.getButtonTypes().setAll(ACCEPT, REJECT);
+                    giveplayerChoice.setHeaderText(((Message) data).getClient() + "Wants to play!");
+                    giveplayerChoice.setContentText("Do you accept?");
 
+                    Optional<ButtonType> result = giveplayerChoice.showAndWait();
+                    if (result.isPresent() && result.get() == ACCEPT) {
+                     clientConnection.send(new Message(Message.challengeResponse, "Accept", currentUser,((Message) data).getClient()));
+                    }
+                    else if (result.isPresent() && result.get() == REJECT) {
+                        clientConnection.send(new Message(Message.challengeResponse, "Decline", currentUser,((Message) data).getClient()));
+                    }
                 } else if (((Message) data).getMsgType().equals(Message.sendToIndvidual)){
                     String currReceiver = ((Message)data).getClient();
                     Stage currChat = chatsystem(currReceiver);
                     currChat.show();
                     chatListMap.get(currReceiver).getItems().add( currReceiver + ": " + ((Message) data).getMessage());  //receiver side
                 }
+                else if (((Message) data).getMsgType().equals(Message.startGame)){
+                    sceneMap.put("game", createGameGUI(((Message) data).getClient()));
+                    primaryStage.setScene(sceneMap.get("game"));
+                };
             });
         });
 
@@ -98,7 +120,6 @@ public class ClientGUI extends Application {
         sceneMap.put("home",  createHomeGUI());
 
         chatMap = new HashMap<String, Stage>();
-
         chatListMap = new HashMap<String, ListView<String>>();
 
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
@@ -113,11 +134,7 @@ public class ClientGUI extends Application {
     public Scene createHomeGUI(){
         root = new BorderPane();
         board = new GridPane();
-        for (int row = 0 ; row < 8; row++){
-            for (int col = 0 ; col < 8; col++){
-                board.add(buildSquare(row,col),col,row);
-            }
-        }
+        buildBoard();
         clientList = new VBox();
         userPane = new ScrollPane(clientList);      //created a scroll pane and itll adjust accordingly
         userPane.setFitToWidth(true);
@@ -185,7 +202,20 @@ public class ClientGUI extends Application {
 
         return new Scene(root, 800, 600);
     }
-
+    public Scene createGameGUI(String target){
+        root = new BorderPane();
+        Label userLabel = new Label(currentUser);
+        Label opponentLabel = new Label(target);
+        Button resignButton = new Button("Resign");
+        VBox chatBox = buildChatBox(target);
+        HBox idk =  new HBox(10, userLabel, resignButton);
+        board = buildBoard();
+        root.setTop(opponentLabel);
+        root.setCenter(board);
+        root.setBottom(idk);
+        root.setRight(chatBox);
+        return new Scene(root,800,600);
+    }
     private StackPane buildSquare(int row, int col){
         StackPane square = new StackPane();
         Rectangle rectangle = new Rectangle(25,25);
@@ -197,5 +227,32 @@ public class ClientGUI extends Application {
         }
         square.getChildren().add(rectangle);
         return square;
+    }
+    private GridPane buildBoard(){
+        GridPane board = new GridPane();
+        for (int row = 0 ; row < 8; row++){
+            for (int col = 0 ; col < 8; col++){
+                board.add(buildSquare(row,col),col,row);
+            }
+        }
+        return board;
+    }
+
+    private VBox buildChatBox(String target){
+        messagesList = new ListView<String>();
+        messageField = new TextField();
+        messagePane = new ScrollPane(messagesList);
+        sendButton = new Button("Send");
+
+        messageBox = new HBox(10, messageField, sendButton);
+        chatVbox = new VBox(10, messagePane, messageBox);
+        chatVbox.setAlignment(Pos.CENTER);
+
+        sendButton.setOnAction(e->{
+            Message currMessage = new Message(Message.sendToIndvidual, messageField.getText(), currentUser, target);    //Creates the message to individual
+            clientConnection.send(currMessage);
+            chatListMap.get(target).getItems().add(currentUser + ": " + messageField.getText());     //Sender side
+        });
+        return chatVbox;
     }
 }

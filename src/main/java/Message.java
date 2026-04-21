@@ -18,6 +18,7 @@ public class Message implements Serializable {
     public static final String status = "Status";
     public static final String challenge = "challenge";
     public static final String challengeResponse = "challengeResponse";
+    public static final String startGame = "start game";
 
 
     public Message(String msgType, String client) { //Create a user
