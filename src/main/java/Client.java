@@ -4,7 +4,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.function.Consumer;
-
+import Checkers.Move;
+import Checkers.Pieces;
 public class Client extends Thread{
 
     Socket socketClient;
@@ -27,14 +28,21 @@ public class Client extends Thread{
 
         while(true) {
             try {
-                Message message = (Message) in.readObject();
-                callback.accept(message);
+                Object receieved = in.readObject();
+                if (receieved instanceof Message){
+                    Message message = (Message) receieved;
+                    callback.accept(message);
+                }
+                else if (receieved instanceof Move) {
+                    Move move = (Move) receieved;
+                    callback.accept(move);
+                }
             }
             catch(Exception e) {}
         }
     }
 
-    public void send(Message data) {
+    public void send(Serializable data) {
         try {
             out.writeObject(data);
         } catch (IOException e) {

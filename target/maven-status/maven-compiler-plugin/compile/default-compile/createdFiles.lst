@@ -1,4 +1,9 @@
-ClientGUI$1.class
+Checkers/Rules.class
+Checkers/Board.class
 ClientGUI.class
-Message.class
 Client.class
+Checkers/Move.class
+Checkers/Pieces.class
+ClientGUI$1.class
+Message.class
+Checkers/Pieces$Color.class

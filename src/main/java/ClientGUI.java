@@ -1,12 +1,17 @@
 import java.util.HashMap;
 import java.util.Optional;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.effect.Effect;
+import javafx.scene.effect.Glow;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -19,7 +24,8 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
+import Checkers.Move;
+import Checkers.Pieces;
 public class ClientGUI extends Application {
     HashMap<String, Scene> sceneMap, loginMap;
     HashMap<String, Stage> chatMap;
@@ -29,12 +35,16 @@ public class ClientGUI extends Application {
     VBox clientList, loginVbox, chatVbox;
     HBox userBox, messageBox;
     Client clientConnection;
-    Label loginLabel, userLabel;
+    Label loginLabel, userLabel,errormsg;
     String currentUser;
     BorderPane root;
     GridPane board;
     ScrollPane userPane, messagePane;
     Stage chatbox;
+    boolean pieceSelected = false;
+    String playerColor;
+    int pCol, pRow, nRow, nCol;
+    Pieces selectedPiece;
 
     ListView<String> messagesList;
     public static void main(String[] args) {
@@ -45,13 +55,14 @@ public class ClientGUI extends Application {
     public void start(Stage primaryStage) {
          clientConnection = new Client(data -> {    //Creating the new Client
             Platform.runLater(()-> {
-                if (((Message) data).getMsgType().equals(Message.error)) {          //Conditions for different server messages
-                    loginLabel.setText("Username is already Taken!");
-                } else if (((Message) data).getMsgType().equals(Message.userList)) {
-                    currentUser = loginField.getText();
-                    clientList.getChildren().clear();       //Clear the Vbox and repopulate it everytime a new user joins
-                        for(String username : ((Message) data).getGroupMembers()) {
-                            if(username.equals(currentUser)){      //This makes it so if its your screen you won't see the play btn on ur name
+                if (data instanceof  Message) {
+                    if (((Message) data).getMsgType().equals(Message.error)) {          //Conditions for different server messages
+                        loginLabel.setText("Username is already Taken!");
+                    } else if (((Message) data).getMsgType().equals(Message.userList)) {
+                        currentUser = loginField.getText();
+                        clientList.getChildren().clear();       //Clear the Vbox and repopulate it everytime a new user joins
+                        for (String username : ((Message) data).getGroupMembers()) {
+                            if (username.equals(currentUser)) {      //This makes it so if its your screen you won't see the play btn on ur name
                                 userLabel = new Label();
                                 userLabel.setText(username);
                                 userBox = new HBox(userLabel);
@@ -61,51 +72,55 @@ public class ClientGUI extends Application {
                                 userLabel.setText(username);
                                 playButton = new Button("Play");
                                 playButton.setOnAction((event) -> {
-                                   clientConnection.send(new Message(Message.challenge, currentUser, username));
+                                    clientConnection.send(new Message(Message.challenge, "", currentUser, username));
                                 });
                                 messageButton = new Button("Message");
                                 userBox = new HBox(userLabel, playButton, messageButton);
                                 clientList.getChildren().add(userBox);
-                                messageButton.setOnAction(e->{
+                                messageButton.setOnAction(e -> {
                                     Stage chatStage = chatsystem(username);
                                     chatStage.show();
                                 });
                             }
                         }
-                    if (primaryStage.getScene() == loginMap.get("login") && ((Message) data).getGroupMembers().contains(currentUser)) {
-                        primaryStage.setScene(sceneMap.get("home"));
-                        primaryStage.setTitle("Client");
-                        primaryStage.show();
-                    }
-                } else if (((Message) data).getMsgType().equals(Message.serverMessage)) {
+                        if (primaryStage.getScene() == loginMap.get("login") && ((Message) data).getGroupMembers().contains(currentUser)) {
+                            primaryStage.setScene(sceneMap.get("home"));
+                            primaryStage.setTitle("Client");
+                            primaryStage.show();
+                        }
+                    } else if (((Message) data).getMsgType().equals(Message.serverMessage)) {
 
-                } else if (((Message) data).getMsgType().equals(Message.challenge)) {
-                    ButtonType ACCEPT =  new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
-                    ButtonType REJECT = new ButtonType("Reject", ButtonBar.ButtonData.CANCEL_CLOSE);
-                    Alert giveplayerChoice = new Alert(Alert.AlertType.CONFIRMATION);
-                    giveplayerChoice.setTitle("Game Challenge");
-                    giveplayerChoice.getButtonTypes().setAll(ACCEPT, REJECT);
-                    giveplayerChoice.setHeaderText(((Message) data).getClient() + "Wants to play!");
-                    giveplayerChoice.setContentText("Do you accept?");
+                    } else if (((Message) data).getMsgType().equals(Message.challenge)) {
+                        ButtonType ACCEPT = new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
+                        ButtonType REJECT = new ButtonType("Reject", ButtonBar.ButtonData.CANCEL_CLOSE);
+                        Alert giveplayerChoice = new Alert(Alert.AlertType.CONFIRMATION);
+                        giveplayerChoice.setTitle("Game Challenge");
+                        giveplayerChoice.getButtonTypes().setAll(ACCEPT, REJECT);
+                        giveplayerChoice.setHeaderText(((Message) data).getClient() + "Wants to play!");
+                        giveplayerChoice.setContentText("Do you accept?");
 
-                    Optional<ButtonType> result = giveplayerChoice.showAndWait();
-                    if (result.isPresent() && result.get() == ACCEPT) {
-                     clientConnection.send(new Message(Message.challengeResponse, "Accept", currentUser,((Message) data).getClient()));
+                        Optional<ButtonType> result = giveplayerChoice.showAndWait();
+                        if (result.isPresent() && result.get() == ACCEPT) {
+                            clientConnection.send(new Message(Message.challengeResponse, "Accept", currentUser, ((Message) data).getClient()));
+                        } else if (result.isPresent() && result.get() == REJECT) {
+                            clientConnection.send(new Message(Message.challengeResponse, "Decline", currentUser, ((Message) data).getClient()));
+                        }
+                    } else if (((Message) data).getMsgType().equals(Message.sendToIndvidual)) {
+                        String currReceiver = ((Message) data).getClient();
+                        Stage currChat = chatsystem(currReceiver);
+                        currChat.show();
+                        chatListMap.get(currReceiver).getItems().add(currReceiver + ": " + ((Message) data).getMessage());  //receiver side
+                    } else if (((Message) data).getMsgType().equals(Message.startGame)) {
+                        playerColor = ((Message) data).getMessage();
+                        sceneMap.put("game", createGameGUI(((Message) data).getClient()));
+                        primaryStage.setScene(sceneMap.get("game"));
                     }
-                    else if (result.isPresent() && result.get() == REJECT) {
-                        clientConnection.send(new Message(Message.challengeResponse, "Decline", currentUser,((Message) data).getClient()));
-                    }
-                } else if (((Message) data).getMsgType().equals(Message.sendToIndvidual)){
-                    String currReceiver = ((Message)data).getClient();
-                    Stage currChat = chatsystem(currReceiver);
-                    currChat.show();
-                    chatListMap.get(currReceiver).getItems().add( currReceiver + ": " + ((Message) data).getMessage());  //receiver side
+                    ;
                 }
-                else if (((Message) data).getMsgType().equals(Message.startGame)){
-                    sceneMap.put("game", createGameGUI(((Message) data).getClient()));
-                    primaryStage.setScene(sceneMap.get("game"));
-                };
-            });
+                else if (data instanceof Move) {
+                    updateBoard((Move) data);
+                }
+                });
         });
 
         clientConnection.start();
@@ -205,6 +220,7 @@ public class ClientGUI extends Application {
     }
     public Scene createGameGUI(String target){
         root = new BorderPane();
+        errormsg =  new Label();
         Label userLabel = new Label(currentUser);
         Label opponentLabel = new Label(target);
         Button resignButton = new Button("Resign");
@@ -235,23 +251,100 @@ public class ClientGUI extends Application {
         });
         return chatVbox;
     }
+
+    private StackPane updateBoard (Move move){
+        StackPane oldSquare = null;
+        StackPane newSquare = null;
+        for (Node c : board.getChildren()){
+            if (GridPane.getColumnIndex(c) == move.getpCol() && GridPane.getRowIndex(c) == move.getpRow()){
+                oldSquare = (StackPane) c;
+            }
+            else if (GridPane.getColumnIndex(c) == move.getnCol() &&  GridPane.getRowIndex(c) == move.getnRow()){
+                newSquare = (StackPane) c;
+            }
+        }
+        Circle piece = (Circle) oldSquare.getChildren().get(1);
+        newSquare.getChildren().add(piece);
+        oldSquare.getChildren().remove(piece);
+        oldSquare.setUserData(null);
+        newSquare.setUserData(move.getPiece());
+        return newSquare;
+    }
+//    private void handleSquareClick(int row, int col){
+//        System.out.println("Clicked: " + row + ", " + col + " playerColor: " + playerColor);
+//        for (Node c : board.getChildren()){
+//            if (GridPane.getRowIndex(c) == row && GridPane.getColumnIndex(c) == col) {
+//                if (!pieceSelected) {
+//                    System.out.println("Sending move: " + pRow + "," + pCol + " -> " + nRow + "," + nCol);
+//                    System.out.println("Color: " + ((Pieces) c.getUserData()).getColor().toString());
+//                    System.out.println("Match: " + ((Pieces) c.getUserData()).getColor().toString().equals(playerColor));
+//                    if (c.getUserData() != null && ((Pieces) c.getUserData()).getColor().toString().equals(playerColor)) {
+//                        System.out.println("UserData: " + c.getUserData());
+//                        pieceSelected = true;
+//                        selectedPiece = (Pieces) c.getUserData();
+//                        pRow = row;
+//                        pCol = col;
+//                        c.setEffect(new Glow());
+//                    } else {
+//                        errormsg.setText("That is not your piece!");
+//                    }
+//                } else {
+//                    System.out.println("Sending move: " + pRow + "," + pCol + " -> " + nRow + "," + nCol);
+//                    nRow = row;
+//                    nCol = col;
+//                    Move move = new Move(selectedPiece, pRow, pCol, nRow, nCol);
+//                    clientConnection.send(move);
+//                    pieceSelected = false;
+//                }
+//            }
+//        }
+//    }
     private StackPane buildSquare(int row, int col){
         StackPane square = new StackPane();
         Rectangle rectangle = new Rectangle(50,50);
-        if ((row+col)%2 == 0){
+        if ((row+col)%2 != 0){
+            rectangle.setFill(Color.rgb(96,47,1));        }
+        else {
             rectangle.setFill(Color.rgb(232,245,184));
         }
-        else {
-            rectangle.setFill(Color.rgb(0,0,0));
-        }
         square.getChildren().add(rectangle);
-        if ((row+col)%2 == 0) {
+        if ((row+col)%2 != 0) {
             if (row < 3) {
                 square.getChildren().add(buildRedPiece());
-            } else if (row > 5) {
+                square.setUserData(new Pieces(Pieces.Color.RED));
+            } else if (row > 4) {
                 square.getChildren().add(buildBlackPiece());
+                square.setUserData(new Pieces(Pieces.Color.BLACK));
             }
         }
+        square.setOnDragDetected(e -> {
+            if (square.getUserData() != null &&
+                    ((Pieces) square.getUserData()).getColor().toString().equals(playerColor)) {
+                Dragboard db = square.startDragAndDrop(TransferMode.MOVE);
+                ClipboardContent content = new ClipboardContent();
+                content.putString(row + "," + col);
+                db.setContent(content);
+                pRow = row;
+                pCol = col;
+                e.consume();
+            }
+        });
+        square.setOnDragOver(e -> {
+            if (e.getGestureSource() != square && e.getDragboard().hasString()) {
+                e.acceptTransferModes(TransferMode.MOVE);
+            }
+            e.consume();
+        });
+
+        square.setOnDragDropped(e -> {
+            nRow = row;
+            nCol = col;
+            Move move = new Move(selectedPiece, pRow, pCol, nRow, nCol);
+            clientConnection.send(move);
+            updateBoard(move);
+            e.setDropCompleted(true);
+            e.consume();
+        });
         return square;
     }
     private GridPane buildBoard(){
