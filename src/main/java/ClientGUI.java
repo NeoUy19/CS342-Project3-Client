@@ -224,13 +224,16 @@ public class ClientGUI extends Application {
 
         loginField = new TextField();
         loginField.setPromptText("Enter your username");
+        loginField.setPrefHeight(35);
         signinButton = new Button("Sign in");
         signinButton.setStyle("-fx-font-size: 24px;" + "-fx-font-weight: bold;" + "-fx-font-variant: small-caps;" + "-fx-background-color: #b61e2b;" + "-fx-text-fill: white;");
         loginLabel = new Label();
 
         signinButton.setOnAction(e->{
             Message userName = new Message(Message.createUser, loginField.getText());       //Gets the username and stores it
-            clientConnection.send(userName);
+            if(!loginField.getText().equals("")){
+                clientConnection.send(userName);
+            }
         });
 
         loginVbox = new VBox(10, imageView,loginField, signinButton, loginLabel);
