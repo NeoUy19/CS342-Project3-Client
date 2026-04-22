@@ -65,17 +65,35 @@ public class ClientGUI extends Application {
                             if (username.equals(currentUser)) {      //This makes it so if its your screen you won't see the play btn on ur name
                                 userLabel = new Label();
                                 userLabel.setText(username);
+                                userLabel.setPrefHeight(20);
+                                userLabel.setStyle("-fx-font-weight: 1800;" + "-fx-font-variant: small-caps;" + "-fx-text-fill: white;" + "-fx-font-size: 20;");
                                 userBox = new HBox(userLabel);
+                                userBox.setStyle("-fx-background-color: #9a6139;" + "-fx-border-color: black; -fx-border-width: 1;" );
+                                userBox.setPrefHeight(40);
                                 clientList.getChildren().add(userBox);
                             } else {
                                 userLabel = new Label();        //Displays current players with a play btn and message btn
                                 userLabel.setText(username);
-                                playButton = new Button("Play");
+                                userLabel.setPrefHeight(20);
+                                userLabel.setStyle("-fx-font-weight: 1800;" + "-fx-font-variant: small-caps;" + "-fx-text-fill: white;" + "-fx-font-size: 20");
+                                Image sword = new Image(getClass().getResourceAsStream("/swordsTransparent.png"));
+                                ImageView imageSword = new ImageView(sword);
+                                imageSword.setFitWidth(25);
+                                imageSword.setFitHeight(25);
+                                playButton = new Button("");
+                                playButton.setGraphic(imageSword);
                                 playButton.setOnAction((event) -> {
                                     clientConnection.send(new Message(Message.challenge, "", currentUser, username));
                                 });
-                                messageButton = new Button("Message");
-                                userBox = new HBox(userLabel, playButton, messageButton);
+                                Image message = new Image(getClass().getResourceAsStream("/message.png"));
+                                ImageView imageMessage = new ImageView(message);
+                                imageMessage.setFitWidth(25);
+                                imageMessage.setFitHeight(25);
+                                messageButton = new Button("");
+                                messageButton.setGraphic(imageMessage);
+                                userBox = new HBox(10,userLabel, playButton, messageButton);
+                                userBox.setStyle("-fx-background-color: #9a6139;" + "-fx-border-color: black; -fx-border-width: 1;");
+                                userBox.setPrefHeight(40);
                                 clientList.getChildren().add(userBox);
                                 messageButton.setOnAction(e -> {
                                     Stage chatStage = chatsystem(username);
@@ -152,8 +170,12 @@ public class ClientGUI extends Application {
         board = new GridPane();
         board = buildBoard();
         clientList = new VBox();
+        clientList.setPrefWidth(200);
         userPane = new ScrollPane(clientList);      //created a scroll pane and itll adjust accordingly
         userPane.setFitToWidth(true);
+        userPane.setMaxHeight(200);
+        userPane.setStyle("-fx-background-color:#595252 ");
+        root.setStyle("-fx-background-color:#b61e2b;");
         root.setLeft(board);
         root.setRight(userPane);
         return new Scene(root, 800, 600);
@@ -304,9 +326,9 @@ public class ClientGUI extends Application {
         StackPane square = new StackPane();
         Rectangle rectangle = new Rectangle(50,50);
         if ((row+col)%2 != 0){
-            rectangle.setFill(Color.rgb(96,47,1));        }
+            rectangle.setFill(Color.rgb(0,0,0));        }
         else {
-            rectangle.setFill(Color.rgb(232,245,184));
+            rectangle.setFill(Color.rgb(255,255,255));
         }
         square.getChildren().add(rectangle);
         if ((row+col)%2 != 0) {
@@ -359,13 +381,13 @@ public class ClientGUI extends Application {
     }
     private Circle buildRedPiece(){
         Circle redCircle = new Circle(25);
-        redCircle.setFill(Color.rgb(255,0,0));
+        redCircle.setFill(Color.rgb(168,43,43));
         return redCircle;
     }
 
     private Circle buildBlackPiece(){
         Circle blackCircle = new Circle(25);
-        blackCircle.setFill(Color.rgb(0,0,0));
+        blackCircle.setFill(Color.rgb(67,57,57));
         return blackCircle;
     }
 }

@@ -1,9 +1,9 @@
 Checkers/Rules.class
-Checkers/Board.class
-ClientGUI.class
 Client.class
 Checkers/Move.class
 Checkers/Pieces.class
-ClientGUI$1.class
 Message.class
+Checkers/Board.class
+ClientGUI.class
+ClientGUI$1.class
 Checkers/Pieces$Color.class
