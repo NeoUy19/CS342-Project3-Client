@@ -13,14 +13,14 @@ public class Board {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 if (row <= 2) {
-                    if ((row + col) % 2 == 0) {
+                    if ((row + col) % 2 != 0) {
                         board[row][col] = new Pieces(Pieces.Color.RED);
                     } else {
                         board[row][col] = null;
                     }
                 }
                 if (row >= 5) {
-                    if ((row + col) % 2 == 0) {
+                    if ((row + col) % 2 != 0) {
                         board[row][col] = new Pieces(Pieces.Color.BLACK);
                     } else {
                         board[row][col] = null;

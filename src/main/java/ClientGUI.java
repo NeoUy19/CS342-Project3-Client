@@ -343,6 +343,7 @@ public class ClientGUI extends Application {
         square.setOnDragDetected(e -> {
             if (square.getUserData() != null &&
                     ((Pieces) square.getUserData()).getColor().toString().equals(playerColor)) {
+                selectedPiece = (Pieces) square.getUserData();
                 Dragboard db = square.startDragAndDrop(TransferMode.MOVE);
                 ClipboardContent content = new ClipboardContent();
                 content.putString(row + "," + col);
@@ -364,7 +365,6 @@ public class ClientGUI extends Application {
             nCol = col;
             Move move = new Move(selectedPiece, pRow, pCol, nRow, nCol);
             clientConnection.send(move);
-            updateBoard(move);
             e.setDropCompleted(true);
             e.consume();
         });

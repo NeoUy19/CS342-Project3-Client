@@ -19,7 +19,7 @@ public class Rules {
             if (nRow > 7 || nCol > 7 || nRow < 0 || nCol < 0) { //out of bounds error
                 return false;
             }
-                if (((nRow + nCol) % 2 == 0) && (nRow < pRow && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
+                if (((nRow + nCol) % 2 != 0) && (nRow < pRow && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
                     if (board.getPiece(nRow, nCol) == null) { //check if the new spot is empty
                         board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
                         board.setPiece(pRow, pCol, null);
@@ -47,7 +47,7 @@ public class Rules {
             if (nRow > 7 || nCol > 7 || nRow < 0 || nCol < 0) { //out of bounds error
                 return false;
             }
-            if (((nRow + nCol) % 2 == 0) && (nRow > pRow && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
+            if (((nRow + nCol) % 2 != 0) && (nRow > pRow && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
                 if (board.getPiece(nRow, nCol) == null) { //check if the new spot is empty
                     board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
                     board.setPiece(pRow, pCol, null);
