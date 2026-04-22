@@ -36,7 +36,7 @@ public class ClientGUI extends Application {
     HBox userBox, messageBox;
     Client clientConnection;
     Label loginLabel, userLabel,errormsg;
-    String currentUser;
+    String currentUser, opponent;
     BorderPane root;
     GridPane board;
     ScrollPane userPane, messagePane;
@@ -107,7 +107,21 @@ public class ClientGUI extends Application {
                             primaryStage.show();
                         }
                     } else if (((Message) data).getMsgType().equals(Message.serverMessage)) {
-
+                        if (((Message) data).getMessage().contains("Wins!")) {
+                            ButtonType REMATCH = new ButtonType("rematch", ButtonBar.ButtonData.OK_DONE);
+                            ButtonType HOME = new ButtonType("home",  ButtonBar.ButtonData.CANCEL_CLOSE);
+                            Alert winner = new Alert(Alert.AlertType.CONFIRMATION);
+                            winner.setTitle("Winner!");
+                            winner.getButtonTypes().setAll(REMATCH, HOME);
+                            winner.setHeaderText(((Message) data).getMessage());
+                            Optional<ButtonType> result = winner.showAndWait();
+                            if (result.isPresent() && result.get() == REMATCH) {
+                                    clientConnection.send(new Message(Message.challenge, "", currentUser, opponent));
+                            }
+                            else if(result.isPresent() && result.get() == HOME) {
+                                primaryStage.setScene(sceneMap.get("home"));
+                            }
+                        }
                     } else if (((Message) data).getMsgType().equals(Message.challenge)) {
                         ButtonType ACCEPT = new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
                         ButtonType REJECT = new ButtonType("Reject", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -130,10 +144,10 @@ public class ClientGUI extends Application {
                         chatListMap.get(currReceiver).getItems().add(currReceiver + ": " + ((Message) data).getMessage());  //receiver side
                     } else if (((Message) data).getMsgType().equals(Message.startGame)) {
                         playerColor = ((Message) data).getMessage();
+                        opponent= ((Message) data).getClient() ;
                         sceneMap.put("game", createGameGUI(((Message) data).getClient()));
                         primaryStage.setScene(sceneMap.get("game"));
                     }
-                    ;
                 }
                 else if (data instanceof Move) {
                     updateBoard((Move) data);
