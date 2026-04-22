@@ -11,15 +11,35 @@ public class Rules {
         int pCol = move.getpCol();
         int nRow = move.getnRow();
         int nCol = move.getnCol();
+        System.out.println("pRow: " + pRow + " pCol: " + pCol + " piece: " + board.getPiece(pRow, pCol));
 
         if (board.getCurrentMove() == Pieces.Color.RED) { //check if its reds turn
+            if (board.getPiece(pRow, pCol) == null) return false;
+            System.out.println("currentMove: " + board.getCurrentMove());
+            System.out.println("pieceColor: " + board.getPiece(pRow, pCol).getColor());
             if (board.getPiece(pRow, pCol).getColor() != Pieces.Color.RED) { // wrong send error
                 return false;
             }
             if (nRow > 7 || nCol > 7 || nRow < 0 || nCol < 0) { //out of bounds error
                 return false;
             }
-                if (((nRow + nCol) % 2 != 0) && (nRow < pRow && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
+            if (nRow == pRow - 2 && Math.abs(nCol - pCol) == 2) {
+                int midRow = pRow - 1;
+                int midCol = (pCol + nCol) / 2;
+                if (board.getPiece(midRow, midCol) != null &&
+                        board.getPiece(midRow, midCol).getColor() == Pieces.Color.BLACK &&
+                        board.getPiece(nRow, nCol) == null) {
+                    board.setPiece(midRow, midCol, null);
+                    board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
+                    board.setPiece(pRow, pCol, null);
+                    board.switchTurn();
+                    return true;
+                }
+                return false;
+            }
+                if (((nRow + nCol) % 2 != 0) && (nRow == pRow - 1 && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
+                    System.out.println("nRow: " + nRow + " nCol: " + nCol + " nPiece: " + board.getPiece(nRow, nCol));
+
                     if (board.getPiece(nRow, nCol) == null) { //check if the new spot is empty
                         board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
                         board.setPiece(pRow, pCol, null);
@@ -28,26 +48,38 @@ public class Rules {
                     } else { //new spot is not empty check if the next spot is taken if it is throw an error if it is not force a take
                         if (board.getPiece(nRow, nCol).getColor() == board.getPiece(pRow, pCol).getColor()) {//check if its a teammate or not
                             return false; //cannot take teammate error msg popup
-                        } else if (board.getPiece(nRow, nCol) != board.getPiece(pRow, pCol)) { //take the piece if multiple in a row can be taken while loop maybe recurse?
-                            board.setPiece(nRow, nCol, null);
-                            board.setPiece(nRow-1,nCol + (nCol-pCol), board.getPiece(pRow, pCol));
-                            board.setPiece(pRow, pCol, null);
-                            continueJumpRed(nRow-1,nCol + (nCol-pCol), Pieces.Color.RED);
-                            board.switchTurn();
-                            return true;
+                        }
+                        else {
+                            return false;
                         }
                     }
                 }
             }
 
         if (board.getCurrentMove() == Pieces.Color.BLACK) {
+            if (board.getPiece(pRow, pCol) == null) return false;
             if (board.getPiece(pRow, pCol).getColor() != Pieces.Color.BLACK) { // wrong send error
                 return false;
             }
             if (nRow > 7 || nCol > 7 || nRow < 0 || nCol < 0) { //out of bounds error
                 return false;
             }
-            if (((nRow + nCol) % 2 != 0) && (nRow > pRow && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
+            if (nRow == pRow + 2 && Math.abs(nCol - pCol) == 2) {
+                int midRow = pRow + 1;
+                int midCol = (pCol + nCol) / 2;
+                if (board.getPiece(midRow, midCol) != null &&
+                        board.getPiece(midRow, midCol).getColor() == Pieces.Color.RED &&
+                        board.getPiece(nRow, nCol) == null) {
+                    board.setPiece(midRow, midCol, null);
+                    board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
+                    board.setPiece(pRow, pCol, null);
+                    board.switchTurn();
+                    return true;
+                }
+                return false;
+            }
+
+            if (((nRow + nCol) % 2 != 0) && (nRow == pRow +1 && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
                 if (board.getPiece(nRow, nCol) == null) { //check if the new spot is empty
                     board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
                     board.setPiece(pRow, pCol, null);
@@ -56,13 +88,9 @@ public class Rules {
                 } else { //new spot is not empty check if the next spot is taken if it is throw an error if it is not force a take
                     if (board.getPiece(nRow, nCol).getColor() == board.getPiece(pRow, pCol).getColor()) {//check if its a teammate or not
                         return false; //cannot take teammate error msg popup
-                    } else if (board.getPiece(nRow, nCol) != board.getPiece(pRow, pCol)) { //take the piece if multiple in a row can be taken while loop maybe recurse?
-                        board.setPiece(nRow, nCol, null);
-                        board.setPiece(nRow+1,nCol + (nCol-pCol), board.getPiece(pRow, pCol));
-                        board.setPiece(pRow, pCol, null);
-                        continueJumpBlack(nRow+1,nCol + (nCol-pCol), Pieces.Color.BLACK);
-                        board.switchTurn();
-                        return true;
+                    }
+                    else  {
+                        return false;
                     }
                 }
             }

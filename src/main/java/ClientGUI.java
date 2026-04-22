@@ -281,6 +281,12 @@ public class ClientGUI extends Application {
     private StackPane updateBoard (Move move){
         StackPane oldSquare = null;
         StackPane newSquare = null;
+        StackPane middleSquare = null; //For taking pieces
+
+        int midRow = (move.getpRow() + move.getnRow()) / 2;
+        int midCol = (move.getpCol() + move.getnCol()) / 2;
+        boolean isJump = Math.abs(move.getnRow() - move.getpRow()) == 2;
+
         for (Node c : board.getChildren()){
             if (GridPane.getColumnIndex(c) == move.getpCol() && GridPane.getRowIndex(c) == move.getpRow()){
                 oldSquare = (StackPane) c;
@@ -288,12 +294,20 @@ public class ClientGUI extends Application {
             else if (GridPane.getColumnIndex(c) == move.getnCol() &&  GridPane.getRowIndex(c) == move.getnRow()){
                 newSquare = (StackPane) c;
             }
+            else if (isJump && GridPane.getColumnIndex(c) == midCol && GridPane.getRowIndex(c) == midRow){
+                middleSquare = (StackPane) c;
+            }
         }
         Circle piece = (Circle) oldSquare.getChildren().get(1);
         newSquare.getChildren().add(piece);
         oldSquare.getChildren().remove(piece);
         oldSquare.setUserData(null);
         newSquare.setUserData(move.getPiece());
+
+        if (isJump && middleSquare != null && middleSquare.getChildren().size() > 1) {
+            middleSquare.getChildren().remove(1);
+            middleSquare.setUserData(null);
+        }
         return newSquare;
     }
 //    private void handleSquareClick(int row, int col){
