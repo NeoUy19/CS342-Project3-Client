@@ -31,6 +31,7 @@ public class ClientGUI extends Application {
     HashMap<String, Scene> sceneMap, loginMap;
     HashMap<String, Stage> chatMap;
     HashMap<String ,ListView<String>> chatListMap;
+    HashMap<String, Button> playbuttonMap;
     private TextField usernameField, messageField, loginField;
     private Button sendButton, playButton, howtoplay, signinButton, messageButton, agreeChal, rejectChal;
     VBox clientList, loginVbox, chatVbox;
@@ -77,8 +78,10 @@ public class ClientGUI extends Application {
                                 imageSword.setFitWidth(25);
                                 imageSword.setFitHeight(25);
                                 playButton = new Button("");
+                                playbuttonMap.put(username, playButton);
                                 playButton.setGraphic(imageSword);
                                 playButton.setOnAction((event) -> {
+                                    playButton.setDisable(true);
                                     clientConnection.send(new Message(Message.challenge, "", currentUser, username));
                                 });
                                 Image message = new Image(getClass().getResourceAsStream("/message.png"));
@@ -143,6 +146,13 @@ public class ClientGUI extends Application {
                         opponent= ((Message) data).getClient() ;
                         sceneMap.put("game", createGameGUI(((Message) data).getClient()));
                         primaryStage.setScene(sceneMap.get("game"));
+
+                    } else if(((Message) data).getMsgType().equals(Message.challengeResponse)){
+                        if(((Message) data).getMessage().equals("Accept")){
+                            playbuttonMap.get(((Message) data).getTarget()).setDisable(false);
+                        } else{
+                            playbuttonMap.get(((Message) data).getTarget()).setDisable(false);
+                        }
                     }
                 }
                 else if (data instanceof Move) {
@@ -155,6 +165,8 @@ public class ClientGUI extends Application {
 
         loginMap = new HashMap<String, Scene>();
         loginMap.put("login", loginGUI());
+
+        playbuttonMap = new HashMap<>();
 
         primaryStage.setScene(loginMap.get("login"));
         primaryStage.setTitle("Client");
