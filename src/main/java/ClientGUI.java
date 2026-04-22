@@ -138,13 +138,22 @@ public class ClientGUI extends Application {
                         }
                     } else if (((Message) data).getMsgType().equals(Message.sendToIndvidual)) {
                         String currReceiver = ((Message) data).getClient();
-                        Stage currChat = chatsystem(currReceiver);
-                        currChat.show();
-                        chatListMap.get(currReceiver).getItems().add(currReceiver + ": " + ((Message) data).getMessage());  //receiver side
+                        if (primaryStage.getScene() == sceneMap.get("game"))
+                        {
+                            messagesList.getItems().add(((Message) data).getClient() +": " + ((Message) data).getMessage());
+                            Platform.runLater(() -> messagesList.scrollTo(messagesList.getItems().size() - 1));
+
+                        }
+                        else {
+                            Stage currChat = chatsystem(currReceiver);
+                            currChat.show();
+                            chatListMap.get(currReceiver).getItems().add(currReceiver + ": " + ((Message) data).getMessage());  //receiver side
+
+                        }
                     } else if (((Message) data).getMsgType().equals(Message.startGame)) {
                         playerColor = ((Message) data).getMessage();
-                        opponent= ((Message) data).getClient() ;
-                        sceneMap.put("game", createGameGUI(((Message) data).getClient()));
+                        opponent= ((Message) data).getTarget() ;
+                        sceneMap.put("game", createGameGUI(((Message) data).getTarget()));
                         primaryStage.setScene(sceneMap.get("game"));
 
                     } else if(((Message) data).getMsgType().equals(Message.challengeResponse)){
@@ -203,7 +212,7 @@ public class ClientGUI extends Application {
         topBar.setMargin(users,new Insets(0,10, 0 ,625));
 
         userNameLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #ffffff");
-        topBar.setStyle("-fx-background-color: rgba(0,0,0,.75);");
+        topBar.setStyle("-fx-background-color: rgba(0,0,0,.75);"); //this is the top bar
         BorderPane.setMargin(board, new Insets(100, 0, 100, 50));
         clientList = new VBox();
         clientList.setPrefWidth(200);
@@ -212,14 +221,15 @@ public class ClientGUI extends Application {
         userPane.setMaxHeight(700);
         userPane.setStyle("-fx-background-color: linear-gradient(to bottom, #f5f5f5, #bdbdbd);");
         slidingPane.setCenter(userPane);
+        slidingPane.setLeft(users);
         users.setOnAction(event -> {
-            TranslateTransition userPaneSlide = new TranslateTransition(Duration.millis(300), userPane);
+            TranslateTransition userPaneSlide = new TranslateTransition(Duration.millis(300),  slidingPane);
             if (isSlidePaneOpen){
                 userPaneSlide.setToX(200); //slides to the left
                 isSlidePaneOpen = false;
             }
             else{
-                userPaneSlide.setToX(0);
+                userPaneSlide.setToX(5);
                 isSlidePaneOpen = true;
             }
             userPaneSlide.play();
@@ -255,7 +265,8 @@ public class ClientGUI extends Application {
             Message currMessage = new Message(Message.sendToIndvidual, messageField.getText(), currentUser, target);    //Creates the message to individual
             clientConnection.send(currMessage);
             chatListMap.get(target).getItems().add(currentUser + ": " + messageField.getText());     //Sender side
-
+            messagesList.scrollTo(messagesList.getItems().size() - 1);
+            messageField.clear();
         });
 
         chatMap.put(target,chatbox); //Adds a entry to the hashmap
@@ -297,16 +308,55 @@ public class ClientGUI extends Application {
     public Scene createGameGUI(String target){
         root = new BorderPane();
         errormsg =  new Label();
-        Label userLabel = new Label(currentUser);
-        Label opponentLabel = new Label(target);
+        Label RED_PLAYER; // THIS IS THE CHALLENGER IT GOES ON TOPBOARD
+        Label BLACK_PLAYER;
+        if (playerColor.equals("RED")){
+            RED_PLAYER = new Label(currentUser);
+            BLACK_PLAYER = new Label(target);
+        }
+        else {
+            RED_PLAYER = new Label(target);
+            BLACK_PLAYER = new Label(currentUser);
+        }
+        RED_PLAYER.setStyle("-fx-text-fill: white");
+        BLACK_PLAYER.setStyle("-fx-text-fill: white");
+        HBox topBoard = new HBox(RED_PLAYER);
+        topBoard.setAlignment(Pos.CENTER_LEFT);
+        topBoard.setPrefHeight(10);
+        topBoard.setMaxWidth(360);
+        topBoard.setPadding(new Insets(0,0, 0 ,10));
+
+        HBox botBoard = new HBox(BLACK_PLAYER);
+        botBoard.setAlignment(Pos.CENTER_LEFT);
+        botBoard.setPrefHeight(10);
+        botBoard.setMaxWidth(360);
+        botBoard.setPadding(new Insets(0,0, 0 ,10));
+
+        HBox topBar = new HBox(userNameLabel);
+        topBar.setAlignment(Pos.CENTER_LEFT);
+        topBar.setPrefHeight(10);
+        topBar.setPadding(new Insets(0,10, 0 ,10));
+
+        userNameLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #ffffff");
+        topBar.setStyle("-fx-background-color: rgba(0,0,0,.75);"); //this is the top bar
+
+
+        topBoard.setStyle("-fx-background-color: rgba(0,0,0,.75);"); //top of the board
+        botBoard.setStyle("-fx-background-color: rgba(0,0,0,.75);"); //bottom of the board
+
         Button resignButton = new Button("Resign");
         VBox chatBox = buildChatBox(target);
-        HBox idk =  new HBox(10, userLabel, resignButton);
+
+        HBox idk =  new HBox(10, resignButton);
         board = buildBoard();
-        root.setTop(opponentLabel);
-        root.setCenter(board);
-        root.setBottom(idk);
+        VBox boardBox = new  VBox(topBoard,board,botBoard);
+        root.setCenter(boardBox);
         root.setRight(chatBox);
+        root.setTop(topBar);
+        BorderPane.setMargin(boardBox, new Insets(100, 0, 100, 50));
+        BorderPane.setMargin(chatBox, new Insets(100, 50, 100, 0));
+        root.setStyle("-fx-background-color: linear-gradient(to bottom, #f5f5f5, #bdbdbd);");
+
         return new Scene(root,800,600);
     }
 
@@ -315,7 +365,9 @@ public class ClientGUI extends Application {
         messageField = new TextField();
         messagePane = new ScrollPane(messagesList);
         sendButton = new Button("Send");
-
+//        messagePane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); messagePane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        messagePane.setMaxHeight(300);
+        messagePane.setStyle("-fx-background-color: transparent; -fx-vbar-policy: never;");
         messageBox = new HBox(10, messageField, sendButton);
         chatVbox = new VBox(10, messagePane, messageBox);
         chatVbox.setAlignment(Pos.CENTER);
@@ -323,8 +375,12 @@ public class ClientGUI extends Application {
         sendButton.setOnAction(e->{
             Message currMessage = new Message(Message.sendToIndvidual, messageField.getText(), currentUser, target);    //Creates the message to individual
             clientConnection.send(currMessage);
-            chatListMap.get(target).getItems().add(currentUser + ": " + messageField.getText());     //Sender side
+            messagesList.getItems().add(currentUser + ": " + messageField.getText());
+            Platform.runLater(() -> messagesList.scrollTo(messagesList.getItems().size() - 1));
+            messageField.clear();
         });
+
+
         return chatVbox;
     }
 
@@ -365,9 +421,12 @@ public class ClientGUI extends Application {
         StackPane square = new StackPane();
         Rectangle rectangle = new Rectangle(45,45);
         if ((row+col)%2 != 0){
-            rectangle.setFill(Color.rgb(0,0,0));        }
+            rectangle.setFill(Color.rgb(0,0,0));
+            rectangle.setStyle(" -fx-border-color: black");
+        }
         else {
             rectangle.setFill(Color.rgb(255,255,255));
+            rectangle.setStyle(" -fx-border-color: black");
         }
         square.getChildren().add(rectangle);
         if ((row+col)%2 != 0) {
