@@ -1,8 +1,11 @@
 import java.util.HashMap;
 import java.util.Optional;
+
+import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -12,11 +15,7 @@ import javafx.scene.effect.Glow;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -26,6 +25,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import Checkers.Move;
 import Checkers.Pieces;
+import javafx.util.Duration;
+
 public class ClientGUI extends Application {
     HashMap<String, Scene> sceneMap, loginMap;
     HashMap<String, Stage> chatMap;
@@ -35,7 +36,7 @@ public class ClientGUI extends Application {
     VBox clientList, loginVbox, chatVbox;
     HBox userBox, messageBox;
     Client clientConnection;
-    Label loginLabel, userLabel,errormsg;
+    Label loginLabel, userLabel,errormsg, userNameLabel;
     String currentUser, opponent;
     BorderPane root;
     GridPane board;
@@ -45,6 +46,7 @@ public class ClientGUI extends Application {
     String playerColor;
     int pCol, pRow, nRow, nCol;
     Pieces selectedPiece;
+    boolean isSlidePaneOpen = true;
 
     ListView<String> messagesList;
     public static void main(String[] args) {
@@ -60,17 +62,11 @@ public class ClientGUI extends Application {
                         loginLabel.setText("Username is already Taken!");
                     } else if (((Message) data).getMsgType().equals(Message.userList)) {
                         currentUser = loginField.getText();
+                        userNameLabel.setText(currentUser);
                         clientList.getChildren().clear();       //Clear the Vbox and repopulate it everytime a new user joins
                         for (String username : ((Message) data).getGroupMembers()) {
                             if (username.equals(currentUser)) {      //This makes it so if its your screen you won't see the play btn on ur name
-                                userLabel = new Label();
-                                userLabel.setText(username);
-                                userLabel.setPrefHeight(20);
-                                userLabel.setStyle("-fx-font-weight: 1800;" + "-fx-font-variant: small-caps;" + "-fx-text-fill: white;" + "-fx-font-size: 20;");
-                                userBox = new HBox(userLabel);
-                                userBox.setStyle("-fx-background-color: #9a6139;" + "-fx-border-color: black; -fx-border-width: 1;" );
-                                userBox.setPrefHeight(40);
-                                clientList.getChildren().add(userBox);
+                                continue;
                             } else {
                                 userLabel = new Label();        //Displays current players with a play btn and message btn
                                 userLabel.setText(username);
@@ -180,18 +176,46 @@ public class ClientGUI extends Application {
     }
 
     public Scene createHomeGUI(){
+        boolean open = false;
+        boolean close = true;
+        userNameLabel = new Label();
         root = new BorderPane();
         board = new GridPane();
         board = buildBoard();
+        BorderPane slidingPane = new BorderPane();
+        Button users = new Button("Open Player List");
+        HBox topBar = new HBox(userNameLabel,users);
+        topBar.setAlignment(Pos.CENTER_LEFT);
+        topBar.setPrefHeight(10);
+        topBar.setPadding(new Insets(0,10, 0 ,10));
+        topBar.setMargin(users,new Insets(0,10, 0 ,625));
+
+        userNameLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #ffffff");
+        topBar.setStyle("-fx-background-color: rgba(0,0,0,.75);");
+        BorderPane.setMargin(board, new Insets(100, 0, 100, 50));
         clientList = new VBox();
         clientList.setPrefWidth(200);
         userPane = new ScrollPane(clientList);      //created a scroll pane and itll adjust accordingly
-        userPane.setFitToWidth(true);
-        userPane.setMaxHeight(200);
-        userPane.setStyle("-fx-background-color:#595252 ");
-        root.setStyle("-fx-background-color:#b61e2b;");
+        userPane.setMaxWidth(150);
+        userPane.setMaxHeight(700);
+        userPane.setStyle("-fx-background-color: linear-gradient(to bottom, #f5f5f5, #bdbdbd);");
+        slidingPane.setCenter(userPane);
+        users.setOnAction(event -> {
+            TranslateTransition userPaneSlide = new TranslateTransition(Duration.millis(300), userPane);
+            if (isSlidePaneOpen){
+                userPaneSlide.setToX(200); //slides to the left
+                isSlidePaneOpen = false;
+            }
+            else{
+                userPaneSlide.setToX(0);
+                isSlidePaneOpen = true;
+            }
+            userPaneSlide.play();
+        });
+        root.setStyle("-fx-background-color: linear-gradient(to bottom, #f5f5f5, #bdbdbd);");
         root.setLeft(board);
-        root.setRight(userPane);
+        root.setRight(slidingPane);
+        root.setTop(topBar);
         return new Scene(root, 800, 600);
     }
 
@@ -234,7 +258,7 @@ public class ClientGUI extends Application {
         imageView.setPreserveRatio(true);
 
         root = new BorderPane();
-        root.setStyle("-fx-background-color: #ffffff;"+"-fx-font-family: 'serif';");
+        root.setStyle("-fx-background-color: linear-gradient(to bottom, #f5f5f5, #bdbdbd);"+"-fx-font-family: 'serif';");
 
         loginField = new TextField();
         loginField.setPromptText("Enter your username");
@@ -251,7 +275,7 @@ public class ClientGUI extends Application {
         });
 
         loginVbox = new VBox(10, imageView,loginField, signinButton, loginLabel);
-        loginVbox.setStyle("-fx-background-color: #ffffff;"+"-fx-font-family: 'serif';");
+        loginVbox.setStyle("-fx-background-color: linear-gradient(to bottom, #f5f5f5, #bdbdbd);"+"-fx-font-family: 'serif';");
         root.setCenter(loginVbox);
         loginVbox.setAlignment(Pos.CENTER);
         loginVbox.setMaxWidth(300);
@@ -324,38 +348,10 @@ public class ClientGUI extends Application {
         }
         return newSquare;
     }
-//    private void handleSquareClick(int row, int col){
-//        System.out.println("Clicked: " + row + ", " + col + " playerColor: " + playerColor);
-//        for (Node c : board.getChildren()){
-//            if (GridPane.getRowIndex(c) == row && GridPane.getColumnIndex(c) == col) {
-//                if (!pieceSelected) {
-//                    System.out.println("Sending move: " + pRow + "," + pCol + " -> " + nRow + "," + nCol);
-//                    System.out.println("Color: " + ((Pieces) c.getUserData()).getColor().toString());
-//                    System.out.println("Match: " + ((Pieces) c.getUserData()).getColor().toString().equals(playerColor));
-//                    if (c.getUserData() != null && ((Pieces) c.getUserData()).getColor().toString().equals(playerColor)) {
-//                        System.out.println("UserData: " + c.getUserData());
-//                        pieceSelected = true;
-//                        selectedPiece = (Pieces) c.getUserData();
-//                        pRow = row;
-//                        pCol = col;
-//                        c.setEffect(new Glow());
-//                    } else {
-//                        errormsg.setText("That is not your piece!");
-//                    }
-//                } else {
-//                    System.out.println("Sending move: " + pRow + "," + pCol + " -> " + nRow + "," + nCol);
-//                    nRow = row;
-//                    nCol = col;
-//                    Move move = new Move(selectedPiece, pRow, pCol, nRow, nCol);
-//                    clientConnection.send(move);
-//                    pieceSelected = false;
-//                }
-//            }
-//        }
-//    }
+
     private StackPane buildSquare(int row, int col){
         StackPane square = new StackPane();
-        Rectangle rectangle = new Rectangle(50,50);
+        Rectangle rectangle = new Rectangle(45,45);
         if ((row+col)%2 != 0){
             rectangle.setFill(Color.rgb(0,0,0));        }
         else {
@@ -411,14 +407,18 @@ public class ClientGUI extends Application {
         return board;
     }
     private Circle buildRedPiece(){
-        Circle redCircle = new Circle(25);
+        Circle redCircle = new Circle(20);
         redCircle.setFill(Color.rgb(168,43,43));
+        redCircle.setStroke(Color.rgb(120,20,20));
+        redCircle.setStrokeWidth(4);
         return redCircle;
     }
 
     private Circle buildBlackPiece(){
-        Circle blackCircle = new Circle(25);
+        Circle blackCircle = new Circle(20);
         blackCircle.setFill(Color.rgb(67,57,57));
+        blackCircle.setStroke(Color.rgb(50, 50, 50));
+        blackCircle.setStrokeWidth(4);
         return blackCircle;
     }
 }
