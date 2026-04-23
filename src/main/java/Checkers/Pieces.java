@@ -12,6 +12,10 @@ public class Pieces implements Serializable {
         this.color = color;
         this.pieceType = PieceType.NORMAL;
     }
+    public Pieces(Color color, PieceType pieceType) {
+        this.color = color;
+        this.pieceType = pieceType;
+    }
     public void setColor(Color color) {
         this.color = color;
     }

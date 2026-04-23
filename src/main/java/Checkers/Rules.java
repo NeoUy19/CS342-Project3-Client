@@ -131,15 +131,10 @@ public class Rules {
             if (nRow == pRow + 2 && Math.abs(nCol - pCol) == 2) { //takes
                 int midRow = pRow + 1;
                 int midCol = (pCol + nCol) / 2;
-                if (board.getPiece(midRow, midCol) != null &&
-                        board.getPiece(midRow, midCol).getColor() == enemyColor &&
-                        board.getPiece(nRow, nCol) == null) {
+                if (board.getPiece(midRow, midCol) != null && board.getPiece(midRow, midCol).getColor() == enemyColor &&  board.getPiece(nRow, nCol) == null) {
                     board.setPiece(midRow, midCol, null);
                     board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
                     board.setPiece(pRow, pCol, null);
-                    if (nRow == 7){
-                        board.getPiece(nRow, nCol).setPieceType(Pieces.PieceType.KING);
-                    }
                     board.switchTurn();
                     return true;
                 }
@@ -149,9 +144,6 @@ public class Rules {
                 if (board.getPiece(nRow, nCol) == null) { //check if the new spot is empty
                     board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
                     board.setPiece(pRow, pCol, null);
-                    if (nRow == 7){
-                        board.getPiece(nRow, nCol).setPieceType(Pieces.PieceType.KING);
-                    }
                     board.switchTurn();
                     return true;
                 } else { //new spot is not empty check if the next spot is taken if it is throw an error if it is not force a take
@@ -175,9 +167,6 @@ public class Rules {
                     board.setPiece(midRow, midCol, null);
                     board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
                     board.setPiece(pRow, pCol, null);
-                    if (nRow == 0){
-                        board.getPiece(nRow, nCol).setPieceType(Pieces.PieceType.KING);
-                    }
                     board.switchTurn();
                     return true;
                 }

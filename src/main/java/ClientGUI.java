@@ -419,6 +419,7 @@ public class ClientGUI extends Application {
         oldSquare.getChildren().remove(piece);
         oldSquare.setUserData(null);
         newSquare.setUserData(move.getPiece());
+
         if (move.getPiece().getPieceType() == Pieces.PieceType.KING){
             if (move.getPiece().getColor() == Pieces.Color.RED){
                 Image redCrown = new Image(getClass().getResourceAsStream("/redCrown.png"));
