@@ -12,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.effect.Effect;
 import javafx.scene.effect.Glow;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
@@ -423,12 +424,20 @@ public class ClientGUI extends Application {
                 middleSquare = (StackPane) c;
             }
         }
-        Circle piece = (Circle) oldSquare.getChildren().get(1);
+        Circle piece = null;
+        for (Node n : oldSquare.getChildren()) {
+            if (n instanceof Circle) {
+                piece = (Circle) n;
+                break;
+            }
+        }
         newSquare.getChildren().add(piece);
         oldSquare.getChildren().remove(piece);
+        while (oldSquare.getChildren().size() > 1) {
+            oldSquare.getChildren().remove(1);
+        }
         oldSquare.setUserData(null);
         newSquare.setUserData(move.getPiece());
-
         if (move.getPiece().getPieceType() == Pieces.PieceType.KING){
             if (move.getPiece().getColor() == Pieces.Color.RED){
                 Image redCrown = new Image(getClass().getResourceAsStream("/redCrown.png"));
@@ -447,7 +456,9 @@ public class ClientGUI extends Application {
         }
 
         if (isJump && middleSquare != null && middleSquare.getChildren().size() > 1) {
-            middleSquare.getChildren().remove(1);
+            while (middleSquare.getChildren().size() > 1) {
+                middleSquare.getChildren().remove(1);
+            }
             middleSquare.setUserData(null);
         }
         return newSquare;
@@ -477,8 +488,10 @@ public class ClientGUI extends Application {
         square.setOnDragDetected(e -> {
             if (square.getUserData() != null &&
                     ((Pieces) square.getUserData()).getColor().toString().equals(playerColor)) {
+                WritableImage pieceHeld = square.snapshot(null, null); //get the square clients click and drag
                 selectedPiece = (Pieces) square.getUserData();
                 Dragboard db = square.startDragAndDrop(TransferMode.MOVE);
+                db.setDragView(pieceHeld);
                 ClipboardContent content = new ClipboardContent();
                 content.putString(row + "," + col);
                 db.setContent(content);
