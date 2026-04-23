@@ -8,24 +8,24 @@ public class Rules {
         this.board = board;
     }
 
-    public boolean isValidMove(Move move) { //assume non-king
+    public boolean isValidMove(Move move) { // non-king
         int pRow = move.getpRow();
         int pCol = move.getpCol();
         int nRow = move.getnRow();
         int nCol = move.getnCol();
-        System.out.println("pRow: " + pRow + " pCol: " + pCol + " piece: " + board.getPiece(pRow, pCol));
 
+        if (board.getPiece(pRow, pCol) != null && board.getPiece(pRow, pCol).getPieceType() == Pieces.PieceType.KING) { //check if the piece is a king
+            return isValidKingMove(move);
+        }
         if (board.getCurrentMove() == Pieces.Color.RED) { //check if its reds turn
             if (board.getPiece(pRow, pCol) == null) return false;
-            System.out.println("currentMove: " + board.getCurrentMove());
-            System.out.println("pieceColor: " + board.getPiece(pRow, pCol).getColor());
             if (board.getPiece(pRow, pCol).getColor() != Pieces.Color.RED) { // wrong send error
                 return false;
             }
             if (nRow > 7 || nCol > 7 || nRow < 0 || nCol < 0) { //out of bounds error
                 return false;
             }
-            if (nRow == pRow + 2 && Math.abs(nCol - pCol) == 2) {
+            if (nRow == pRow + 2 && Math.abs(nCol - pCol) == 2) { //takes
                 int midRow = pRow + 1;
                 int midCol = (pCol + nCol) / 2;
                 if (board.getPiece(midRow, midCol) != null &&
@@ -34,17 +34,21 @@ public class Rules {
                     board.setPiece(midRow, midCol, null);
                     board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
                     board.setPiece(pRow, pCol, null);
+                    if (nRow == 7){
+                        board.getPiece(nRow, nCol).setPieceType(Pieces.PieceType.KING);
+                    }
                     board.switchTurn();
                     return true;
                 }
                 return false;
             }
             if (((nRow + nCol) % 2 != 0) && (nRow == pRow + 1 && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
-                System.out.println("nRow: " + nRow + " nCol: " + nCol + " nPiece: " + board.getPiece(nRow, nCol));
-
                 if (board.getPiece(nRow, nCol) == null) { //check if the new spot is empty
                     board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
                     board.setPiece(pRow, pCol, null);
+                    if (nRow == 7){
+                        board.getPiece(nRow, nCol).setPieceType(Pieces.PieceType.KING);
+                    }
                     board.switchTurn();
                     return true;
                 } else { //new spot is not empty check if the next spot is taken if it is throw an error if it is not force a take
@@ -75,6 +79,105 @@ public class Rules {
                     board.setPiece(midRow, midCol, null);
                     board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
                     board.setPiece(pRow, pCol, null);
+                    if (nRow == 0){
+                        board.getPiece(nRow, nCol).setPieceType(Pieces.PieceType.KING);
+                    }
+                    board.switchTurn();
+                    return true;
+                }
+                return false;
+            }
+
+            if (((nRow + nCol) % 2 != 0) && (nRow == pRow - 1 && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
+                if (board.getPiece(nRow, nCol) == null) { //check if the new spot is empty
+                    board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
+                    board.setPiece(pRow, pCol, null);
+                    if (nRow == 0){
+                        board.getPiece(nRow, nCol).setPieceType(Pieces.PieceType.KING);
+                    }
+                    board.switchTurn();
+                    return true;
+                } else { //new spot is not empty check if the next spot is taken if it is throw an error if it is not force a take
+                    if (board.getPiece(nRow, nCol).getColor() == board.getPiece(pRow, pCol).getColor()) {//check if its a teammate or not
+                        return false; //cannot take teammate error msg popup
+                    }
+                    else  {
+                        return false;
+                    }
+                }
+            }
+        }
+        return false; //send an error message on clients screen
+    }
+
+    public boolean isValidKingMove(Move move) {
+        int pRow = move.getpRow();
+        int pCol = move.getpCol();
+        int nRow = move.getnRow();
+        int nCol = move.getnCol();
+
+        Pieces.Color enemyColor = null;
+        if (board.getCurrentMove() != board.getPiece(pRow, pCol).getColor()) return false;
+        if (board.getPiece(pRow, pCol).getColor() == Pieces.Color.RED) {
+            enemyColor = Pieces.Color.BLACK;
+        }
+        else if (board.getPiece(pRow,pCol).getColor() == Pieces.Color.BLACK){
+            enemyColor = Pieces.Color.RED;
+        }
+
+            if (nRow > 7 || nCol > 7 || nRow < 0 || nCol < 0) { //out of bounds error
+                return false;
+            }
+            if (nRow == pRow + 2 && Math.abs(nCol - pCol) == 2) { //takes
+                int midRow = pRow + 1;
+                int midCol = (pCol + nCol) / 2;
+                if (board.getPiece(midRow, midCol) != null &&
+                        board.getPiece(midRow, midCol).getColor() == enemyColor &&
+                        board.getPiece(nRow, nCol) == null) {
+                    board.setPiece(midRow, midCol, null);
+                    board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
+                    board.setPiece(pRow, pCol, null);
+                    if (nRow == 7){
+                        board.getPiece(nRow, nCol).setPieceType(Pieces.PieceType.KING);
+                    }
+                    board.switchTurn();
+                    return true;
+                }
+                return false;
+            }
+            if (((nRow + nCol) % 2 != 0) && (nRow == pRow + 1 && Math.abs(nCol - pCol) == 1)) { //valid move going forward diagonally
+                if (board.getPiece(nRow, nCol) == null) { //check if the new spot is empty
+                    board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
+                    board.setPiece(pRow, pCol, null);
+                    if (nRow == 7){
+                        board.getPiece(nRow, nCol).setPieceType(Pieces.PieceType.KING);
+                    }
+                    board.switchTurn();
+                    return true;
+                } else { //new spot is not empty check if the next spot is taken if it is throw an error if it is not force a take
+                    if (board.getPiece(nRow, nCol).getColor() == board.getPiece(pRow, pCol).getColor()) {//check if its a teammate or not
+                        return false; //cannot take teammate error msg popup
+                    }
+                    else {
+                        return false;
+                    }
+                }
+            }
+
+
+
+            if (nRow == pRow - 2 && Math.abs(nCol - pCol) == 2) {
+                int midRow = pRow - 1;
+                int midCol = (pCol + nCol) / 2;
+                if (board.getPiece(midRow, midCol) != null &&
+                        board.getPiece(midRow, midCol).getColor() == enemyColor &&
+                        board.getPiece(nRow, nCol) == null) {
+                    board.setPiece(midRow, midCol, null);
+                    board.setPiece(nRow, nCol, board.getPiece(pRow, pCol));
+                    board.setPiece(pRow, pCol, null);
+                    if (nRow == 0){
+                        board.getPiece(nRow, nCol).setPieceType(Pieces.PieceType.KING);
+                    }
                     board.switchTurn();
                     return true;
                 }
@@ -96,7 +199,6 @@ public class Rules {
                     }
                 }
             }
-        }
         return false; //send an error message on clients screen
     }
     public boolean continueJumpRed(int row, int col, Pieces.Color color) {
@@ -210,4 +312,21 @@ public class Rules {
         return jumps;
     }
 
+    public Pieces.Color checkForWinner(){
+        int numRed = 0;
+        int numBlack = 0;
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                if (board.getPiece(row,col) != null && board.getPiece(row, col).getColor() == Pieces.Color.RED) {
+                    numRed++;
+                }
+                else if (board.getPiece(row,col) != null && board.getPiece(row, col).getColor() == Pieces.Color.BLACK) {
+                    numBlack++;
+                }
+            }
+        }
+        if (numRed == 0) return Pieces.Color.BLACK;
+        if (numBlack == 0) return Pieces.Color.RED;
+        return null;
+    }
 }
