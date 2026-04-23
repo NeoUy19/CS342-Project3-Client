@@ -26,6 +26,8 @@ import javafx.scene.image.ImageView;
 import Checkers.Move;
 import Checkers.Pieces;
 import javafx.util.Duration;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
 public class ClientGUI extends Application {
     HashMap<String, Scene> sceneMap, loginMap;
@@ -110,6 +112,13 @@ public class ClientGUI extends Application {
                             ButtonType REMATCH = new ButtonType("rematch", ButtonBar.ButtonData.OK_DONE);
                             ButtonType HOME = new ButtonType("home",  ButtonBar.ButtonData.CANCEL_CLOSE);
                             Alert winner = new Alert(Alert.AlertType.CONFIRMATION);
+                            try {
+                                Media sound = new Media(getClass().getResource("/winning.mp3").toURI().toString());
+                                MediaPlayer mediaPlayer = new MediaPlayer(sound);
+                                mediaPlayer.play();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                             winner.setTitle("Winner!");
                             winner.getButtonTypes().setAll(REMATCH, HOME);
                             winner.setHeaderText(((Message) data).getMessage());
