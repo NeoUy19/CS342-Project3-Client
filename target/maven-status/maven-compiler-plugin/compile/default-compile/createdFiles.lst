@@ -6,4 +6,5 @@ Message.class
 Checkers/Board.class
 ClientGUI.class
 ClientGUI$1.class
+Checkers/Pieces$PieceType.class
 Checkers/Pieces$Color.class

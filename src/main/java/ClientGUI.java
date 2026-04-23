@@ -44,6 +44,7 @@ public class ClientGUI extends Application {
     ScrollPane userPane, messagePane;
     Stage chatbox;
     boolean pieceSelected = false;
+    boolean inGame = false;
     String playerColor;
     int pCol, pRow, nRow, nCol;
     Pieces selectedPiece;
@@ -119,6 +120,8 @@ public class ClientGUI extends Application {
                             }
                             else if(result.isPresent() && result.get() == HOME) {
                                 primaryStage.setScene(sceneMap.get("home"));
+                                clientConnection.send(new Message(Message.challengeResponse, "Decline", currentUser, opponent));
+
                             }
                         }
                     } else if (((Message) data).getMsgType().equals(Message.challenge)) {
@@ -151,6 +154,7 @@ public class ClientGUI extends Application {
 
                         }
                     } else if (((Message) data).getMsgType().equals(Message.startGame)) {
+                        inGame = true;
                         playerColor = ((Message) data).getMessage();
                         opponent= ((Message) data).getTarget() ;
                         sceneMap.put("game", createGameGUI(((Message) data).getTarget()));
@@ -160,7 +164,13 @@ public class ClientGUI extends Application {
                         if(((Message) data).getMessage().equals("Accept")){
                             playbuttonMap.get(((Message) data).getTarget()).setDisable(false);
                         } else{
-                            playbuttonMap.get(((Message) data).getTarget()).setDisable(false);
+                            if (primaryStage.getScene() == sceneMap.get("game")){
+                                inGame = false;
+                                primaryStage.setScene(sceneMap.get("home"));
+                            }
+                            else {
+                                playbuttonMap.get(((Message) data).getClient()).setDisable(false);
+                            }
                         }
                     }
                 }
@@ -409,6 +419,22 @@ public class ClientGUI extends Application {
         oldSquare.getChildren().remove(piece);
         oldSquare.setUserData(null);
         newSquare.setUserData(move.getPiece());
+        if (move.getPiece().getPieceType() == Pieces.PieceType.KING){
+            if (move.getPiece().getColor() == Pieces.Color.RED){
+                Image redCrown = new Image(getClass().getResourceAsStream("/redCrown.png"));
+                ImageView crownView = new ImageView(redCrown);
+                crownView.setFitWidth(20);
+                crownView.setFitHeight(20);
+                newSquare.getChildren().add(crownView);
+            }
+            else if (move.getPiece().getColor() == Pieces.Color.BLACK){
+                Image blackCrown = new Image(getClass().getResourceAsStream("/blackCrown.png"));
+                ImageView crownView = new ImageView(blackCrown);
+                crownView.setFitWidth(20);
+                crownView.setFitHeight(20);
+                newSquare.getChildren().add(crownView);
+            }
+        }
 
         if (isJump && middleSquare != null && middleSquare.getChildren().size() > 1) {
             middleSquare.getChildren().remove(1);
