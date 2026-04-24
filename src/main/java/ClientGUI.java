@@ -593,8 +593,8 @@ public class ClientGUI extends Application {
 
     private Circle buildBlackPiece(){
         Circle blackCircle = new Circle(20);
-        blackCircle.setFill(Color.rgb(67,57,57));
-        blackCircle.setStroke(Color.rgb(50, 50, 50));
+        blackCircle.setFill(Color.rgb(75,75,75));
+        blackCircle.setStroke(Color.rgb(100, 100, 100));
         blackCircle.setStrokeWidth(4);
         return blackCircle;
     }
