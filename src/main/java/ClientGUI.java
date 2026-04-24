@@ -140,6 +140,23 @@ public class ClientGUI extends Application {
 
                             }
                         }
+                        else if (((Message) data).getMessage().contains("Draw!")) {
+                            Alert draw = new Alert(Alert.AlertType.CONFIRMATION);
+                            ButtonType REMATCH = new ButtonType("rematch", ButtonBar.ButtonData.OK_DONE);
+                            ButtonType HOME = new ButtonType("home",  ButtonBar.ButtonData.CANCEL_CLOSE);
+                            draw.setTitle("Draw!");
+                            draw.getButtonTypes().setAll(REMATCH, HOME);
+                            draw.setHeaderText(((Message) data).getMessage());
+                            Optional<ButtonType> result = draw.showAndWait();
+                            if (result.isPresent() && result.get() == REMATCH) {
+                                clientConnection.send(new Message(Message.challenge, "", currentUser, opponent));
+                            }
+                            else if(result.isPresent() && result.get() == HOME) {
+                                primaryStage.setScene(sceneMap.get("home"));
+                                clientConnection.send(new Message(Message.challengeResponse, "Decline", currentUser, opponent));
+
+                            }
+                        }
                     } else if (((Message) data).getMsgType().equals(Message.challenge)) {
                         ButtonType ACCEPT = new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
                         ButtonType REJECT = new ButtonType("Reject", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -381,11 +398,13 @@ public class ClientGUI extends Application {
 
         Button resignButton = new Button("Resign");
         VBox chatBox = buildChatBox(target);
-
-        HBox idk =  new HBox(10, resignButton);
+        resignButton.setOnAction(e -> {
+            clientConnection.send(new Message(Message.serverMessage, "Resign", currentUser, opponent));
+        });
+        HBox idk =  new HBox(10, turnLabel, resignButton);
         board = buildBoard();
         updateTurnIndicator();
-        VBox boardBox = new VBox(turnLabel,topBoard,board,botBoard);
+        VBox boardBox = new VBox(idk,topBoard,board,botBoard);
         root.setCenter(boardBox);
         root.setRight(chatBox);
         root.setTop(topBar);

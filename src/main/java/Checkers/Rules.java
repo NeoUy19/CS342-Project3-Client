@@ -354,6 +354,19 @@ public class Rules {
         return null;
     }
 
+    public boolean checkForDraw(){
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                if (board.getPiece(row,col) != null){
+                    if (!validMoves(row,col, board.getPiece(row,col).getColor()).isEmpty()){
+                        return false; //a piece has a move, return false
+                    }
+                }
+            }
+        }
+        return true; //no piece has a move, return true
+    }
+
     private boolean forceTake(Pieces.Color color){
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
