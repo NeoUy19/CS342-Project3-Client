@@ -38,7 +38,7 @@ public class ClientGUI extends Application {
     HashMap<String, Button> playbuttonMap;
     private TextField usernameField, messageField, loginField;
     private Button sendButton, playButton, howtoplay, signinButton, messageButton, agreeChal, rejectChal, emojiButton, emojisButton;
-    VBox clientList, loginVbox, chatVbox;
+    VBox clientList, loginVbox, chatVbox,boardBox;
     HBox userBox, messageBox, topBar;
     Client clientConnection;
     Label loginLabel, userLabel,errormsg, userNameLabel;
@@ -72,7 +72,9 @@ public class ClientGUI extends Application {
                         loginLabel.setText("Username is already Taken!");
                     } else if (((Message) data).getMsgType().equals(Message.userList)) {
                         currentUser = loginField.getText();
-                        userNameLabel.setText(currentUser);
+                        if (userNameLabel != null) {
+                            userNameLabel.setText(currentUser);
+                        }
                         clientList.getChildren().clear();       //Clear the Vbox and repopulate it everytime a new user joins
                         for (String username : ((Message) data).getGroupMembers()) {
                             if (username.equals(currentUser)) {      //This makes it so if its your screen you won't see the play btn on ur name
@@ -135,9 +137,9 @@ public class ClientGUI extends Application {
                                     clientConnection.send(new Message(Message.challenge, "", currentUser, opponent));
                             }
                             else if(result.isPresent() && result.get() == HOME) {
+                                inGame = false;
                                 primaryStage.setScene(sceneMap.get("home"));
                                 clientConnection.send(new Message(Message.challengeResponse, "Decline", currentUser, opponent));
-
                             }
                         }
                         else if (((Message) data).getMessage().contains("Draw!")) {
@@ -152,6 +154,7 @@ public class ClientGUI extends Application {
                                 clientConnection.send(new Message(Message.challenge, "", currentUser, opponent));
                             }
                             else if(result.isPresent() && result.get() == HOME) {
+                                inGame = false;
                                 primaryStage.setScene(sceneMap.get("home"));
                                 clientConnection.send(new Message(Message.challengeResponse, "Decline", currentUser, opponent));
 
@@ -233,7 +236,7 @@ public class ClientGUI extends Application {
         primaryStage.setScene(loginMap.get("login"));
         primaryStage.setTitle("Client");
         primaryStage.show();
-
+        userNameLabel = new Label("");
         sceneMap = new HashMap<String, Scene>();
         sceneMap.put("home", createHomeGUI());
 
@@ -253,18 +256,23 @@ public class ClientGUI extends Application {
         boolean open = false;
         boolean close = true;
         userNameLabel = new Label();
+        userNameLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #ffffff");
+        Label homeUserLabel = new Label();
+        homeUserLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #ffffff");
+        if (currentUser != null) {
+            userNameLabel.setText(currentUser);
+        }
         root = new BorderPane();
         board = new GridPane();
         board = buildBoard();
         BorderPane slidingPane = new BorderPane();
         Button users = new Button("Open Player List");
-        HBox topBar = new HBox(userNameLabel,users);
+        HBox topBar = new HBox(userNameLabel, users);
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setPrefHeight(10);
         topBar.setPadding(new Insets(0,10, 0 ,10));
         topBar.setMargin(users,new Insets(0,10, 0 ,625));
 
-        userNameLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #ffffff");
         topBar.setStyle("-fx-background-color: rgba(0,0,0,.75);"); //this is the top bar
         BorderPane.setMargin(board, new Insets(100, 0, 100, 50));
         clientList = new VBox();
@@ -361,7 +369,9 @@ public class ClientGUI extends Application {
     public Scene createGameGUI(String target){
         root = new BorderPane();
         errormsg =  new Label();
-        Label RED_PLAYER; // THIS IS THE CHALLENGER IT GOES ON TOPBOARD
+        tempBoard = new Pieces[8][8];
+        board = buildBoard();
+        Label RED_PLAYER; // THIS IS THE CHALLENGER
         Label BLACK_PLAYER;
         if (playerColor.equals("RED")){
             RED_PLAYER = new Label(currentUser);
@@ -384,7 +394,9 @@ public class ClientGUI extends Application {
         botBoard.setPrefHeight(10);
         botBoard.setMaxWidth(360);
         botBoard.setPadding(new Insets(0,0, 0 ,10));
-        HBox topBar = new HBox(userNameLabel);
+        Label gameUserLabel = new Label(currentUser);
+        gameUserLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #ffffff");
+        HBox topBar = new HBox(gameUserLabel);
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setPrefHeight(10);
         topBar.setPadding(new Insets(0,10, 0 ,10));
@@ -402,9 +414,14 @@ public class ClientGUI extends Application {
             clientConnection.send(new Message(Message.serverMessage, "Resign", currentUser, opponent));
         });
         HBox idk =  new HBox(10, turnLabel, resignButton);
-        board = buildBoard();
+        if (playerColor.equals("RED")) {
+            board.setRotate(180);
+            boardBox = new VBox(idk,botBoard,board,topBoard);
+        }
+        else {
+            boardBox = new VBox(idk,topBoard,board,botBoard);
+        }
         updateTurnIndicator();
-        VBox boardBox = new VBox(idk,topBoard,board,botBoard);
         root.setCenter(boardBox);
         root.setRight(chatBox);
         root.setTop(topBar);
@@ -524,6 +541,9 @@ public class ClientGUI extends Application {
                 ImageView crownView = new ImageView(redCrown);
                 crownView.setFitWidth(20);
                 crownView.setFitHeight(20);
+                if (playerColor.equals("RED")) {
+                    crownView.setRotate(180);
+                }
                 newSquare.getChildren().add(crownView);
             }
             else if (move.getPiece().getColor() == Pieces.Color.BLACK){
