@@ -197,6 +197,9 @@ public class Rules {
 
     public ArrayList<Move> getMultiJumps(int row, int col, Pieces.Color color) {
         ArrayList<Move> jumps = new ArrayList<>();
+        if (board.getPiece(row, col) != null && board.getPiece(row, col).getPieceType() == Pieces.PieceType.KING) {
+            return kingMultiJump(row, col, color);
+        }
         if (color == Pieces.Color.RED) {
             // Check down-right
             if (row + 2 <= 7 && col + 2 <= 7) {
@@ -270,8 +273,70 @@ public class Rules {
         }
         return jumps;
     }
+    public ArrayList<Move> kingMultiJump(int row, int col, Pieces.Color color) {
+        ArrayList<Move> jumps = new ArrayList<>();
+        Pieces.Color enemyColor = null;
+        if (board.getPiece(row, col).getColor() == Pieces.Color.RED) {
+            enemyColor = Pieces.Color.BLACK;
+        } else if (board.getPiece(row, col).getColor() == Pieces.Color.BLACK) {
+            enemyColor = Pieces.Color.RED;
+        }
+            // Check down-right
+            if (row + 2 <= 7 && col + 2 <= 7) {
+                Pieces mid = board.getPiece(row + 1, col + 1);
+                if (mid != null && mid.getColor() == enemyColor && board.getPiece(row + 2, col + 2) == null) {
+                    Pieces moving = board.getPiece(row, col);
+                    board.setPiece(row + 1, col + 1, null);
+                    board.setPiece(row + 2, col + 2, moving);
+                    board.setPiece(row, col, null);
+                    jumps.add(new Move(moving, row, col, row + 2, col + 2));
+                    jumps.addAll(kingMultiJump(row + 2, col + 2, color));
+                    return jumps;
+                }
+            }
+            // Check down-left
+            if (row + 2 <= 7 && col - 2 >= 0) {
+                Pieces mid = board.getPiece(row + 1, col - 1);
+                if (mid != null && mid.getColor() == enemyColor && board.getPiece(row + 2, col - 2) == null) {
+                    Pieces moving = board.getPiece(row, col);
+                    board.setPiece(row + 1, col - 1, null);
+                    board.setPiece(row + 2, col - 2, moving);
+                    board.setPiece(row, col, null);
+                    jumps.add(new Move(moving, row, col, row + 2, col - 2));
+                    jumps.addAll(kingMultiJump(row + 2, col - 2, color));
+                    return jumps;
+                }
+            }
+            // Check up-right
+            if (row - 2 >= 0 && col + 2 <= 7) {
+                Pieces mid = board.getPiece(row - 1, col + 1);
+                if (mid != null && mid.getColor() == enemyColor && board.getPiece(row - 2, col + 2) == null) {
+                    Pieces moving = board.getPiece(row, col);
+                    board.setPiece(row - 1, col + 1, null);
+                    board.setPiece(row - 2, col + 2, moving);
+                    board.setPiece(row, col, null);
+                    jumps.add(new Move(moving, row, col, row - 2, col + 2));
+                    jumps.addAll(kingMultiJump(row - 2, col + 2, color));
+                    return jumps;
+                }
+            }
+            // Check up-left
+            if (row - 2 >= 0 && col - 2 >= 0) {
+                Pieces mid = board.getPiece(row - 1, col - 1);
+                if (mid != null && mid.getColor() == enemyColor && board.getPiece(row - 2, col - 2) == null) {
+                    Pieces moving = board.getPiece(row, col);
+                    board.setPiece(row - 1, col - 1, null);
+                    board.setPiece(row - 2, col - 2, moving);
+                    board.setPiece(row, col, null);
+                    jumps.add(new Move(moving, row, col, row - 2, col - 2));
+                    jumps.addAll(kingMultiJump(row - 2, col - 2, color));
+                    return jumps;
+                }
+            }
+        return jumps;
+    }
 
-    public Pieces.Color checkForWinner(){
+        public Pieces.Color checkForWinner(){
         int numRed = 0;
         int numBlack = 0;
         for (int row = 0; row < 8; row++) {
@@ -317,6 +382,9 @@ public class Rules {
 
     public ArrayList<int[]> validMoves(int row, int col, Pieces.Color color){
         ArrayList<int[]> validMovesList = new ArrayList<>();
+        if (board.getPiece(row, col) != null && board.getPiece(row, col).getPieceType() == Pieces.PieceType.KING) {
+            return kingValidMoves(row, col, color);
+        }
         if (color == Pieces.Color.RED) { //case for red pieces
             if (row + 1 <= 7 && col + 1 <= 7 && board.getPiece(row+1, col+1) == null) { //single down right
                 validMovesList.add(new int[]{row+1, col+1});
@@ -359,4 +427,51 @@ public class Rules {
         }
         return validMovesList;
     }
-}
+
+    public ArrayList<int[]> kingValidMoves(int row, int col, Pieces.Color color){
+        ArrayList<int[]> validMovesList = new ArrayList<>();
+        Pieces.Color enemyColor = null;
+        if (board.getPiece(row, col).getColor() == Pieces.Color.RED) {
+            enemyColor = Pieces.Color.BLACK;
+        } else if (board.getPiece(row, col).getColor() == Pieces.Color.BLACK) {
+            enemyColor = Pieces.Color.RED;
+        }
+            if (row + 1 <= 7 && col + 1 <= 7 && board.getPiece(row+1, col+1) == null) { //single down right
+                validMovesList.add(new int[]{row+1, col+1});
+            }
+            if (row + 1 <= 7 && col - 1 >= 0 && board.getPiece(row+1, col-1) == null){ //single down left
+                validMovesList.add(new int[]{row+1, col-1});
+
+            }
+            if (row+2<=7 && col+2<=7 && board.getPiece(row+1,col+1) != null && board.getPiece(row+1,col+1).getColor() == enemyColor && board.getPiece(row+2,col+2) == null) {
+                validMovesList.add(new int[]{row+2, col+2}); //add double down right
+            }
+            if (row+2<=7 && col-2 >= 0 && board.getPiece(row+1,col-1) != null && board.getPiece(row+1,col-1).getColor() == enemyColor && board.getPiece(row+2,col-2) == null) {
+                validMovesList.add(new int[]{row+2, col-2}); //add double down left
+            }
+            if (row - 1 >= 0 && col + 1 <= 7 && board.getPiece(row-1, col+1) == null) { //single up right
+                validMovesList.add(new int[]{row-1, col+1});
+            }
+            if (row - 1 >= 0 && col - 1  >= 0 && board.getPiece(row-1, col-1) == null){ //single up left
+                validMovesList.add(new int[]{row-1, col-1});
+
+            }
+            if (row-2>=0 && col+2<=7 && board.getPiece(row-1,col+1) != null && board.getPiece(row-1,col+1).getColor() == enemyColor && board.getPiece(row-2,col+2) == null) {
+                validMovesList.add(new int[]{row-2, col+2}); //add double up right
+            }
+            if (row-2>=0 && col-2 >= 0 && board.getPiece(row-1,col-1) != null && board.getPiece(row-1,col-1).getColor() == enemyColor && board.getPiece(row-2,col-2) == null) {
+                validMovesList.add(new int[]{row-2, col-2}); //add double up left
+            }
+        boolean hasJump = false; //check for forced takes
+        for (int[] move : validMovesList) {
+            if (Math.abs(move[0] - row) == 2) {
+                hasJump = true;
+                break;
+            }
+        }
+        if (hasJump) {
+            validMovesList.removeIf(move -> Math.abs(move[0] - row) != 2);
+        }
+        return validMovesList;
+    }
+    }

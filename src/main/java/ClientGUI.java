@@ -522,7 +522,7 @@ public class ClientGUI extends Application {
             }
             middleSquare.setUserData(null);
         }
-        if (currentTurn.equals("RED")) { //switch turns
+        if (move.getPiece().getColor() == Pieces.Color.RED) {//switch turns
             currentTurn = "BLACK";
         } else {
             currentTurn = "RED";
