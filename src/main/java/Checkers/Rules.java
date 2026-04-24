@@ -207,7 +207,8 @@ public class Rules {
                     board.setPiece(row + 2, col + 2, moving);
                     board.setPiece(row, col, null);
                     if (row + 2 == 7) {
-                        board.setPiece(row + 2, col + 2, new Pieces(Pieces.Color.RED, Pieces.PieceType.KING));
+                        moving = new Pieces(Pieces.Color.RED, Pieces.PieceType.KING);
+                        board.setPiece(row + 2, col + 2, moving);
                     }
                     jumps.add(new Move(moving, row, col, row + 2, col + 2));
                     jumps.addAll(getMultiJumps(row + 2, col + 2, color));
@@ -223,7 +224,8 @@ public class Rules {
                     board.setPiece(row + 2, col - 2, moving);
                     board.setPiece(row, col, null);
                     if (row + 2 == 7) {
-                        board.setPiece(row + 2, col - 2, new Pieces(Pieces.Color.RED, Pieces.PieceType.KING));
+                        moving = new Pieces(Pieces.Color.RED, Pieces.PieceType.KING);
+                        board.setPiece(row + 2, col - 2, moving);
                     }
                     jumps.add(new Move(moving, row, col, row + 2, col - 2));
                     jumps.addAll(getMultiJumps(row + 2, col - 2, color));
@@ -240,7 +242,8 @@ public class Rules {
                     board.setPiece(row - 2, col + 2, moving);
                     board.setPiece(row, col, null);
                     if (row - 2 == 0) {
-                        board.setPiece(row - 2, col + 2, new Pieces(Pieces.Color.BLACK, Pieces.PieceType.KING));
+                        moving = new Pieces(Pieces.Color.BLACK, Pieces.PieceType.KING);
+                        board.setPiece(row - 2, col + 2, moving);
                     }
                     jumps.add(new Move(moving, row, col, row - 2, col + 2));
                     jumps.addAll(getMultiJumps(row - 2, col + 2, color));
@@ -256,7 +259,8 @@ public class Rules {
                     board.setPiece(row - 2, col - 2, moving);
                     board.setPiece(row, col, null);
                     if (row - 2 == 0) {
-                        board.setPiece(row - 2, col - 2, new Pieces(Pieces.Color.BLACK, Pieces.PieceType.KING));
+                        moving = new Pieces(Pieces.Color.BLACK, Pieces.PieceType.KING);
+                        board.setPiece(row - 2, col - 2, moving);
                     }
                     jumps.add(new Move(moving, row, col, row - 2, col - 2));
                     jumps.addAll(getMultiJumps(row - 2, col - 2, color));
@@ -336,10 +340,10 @@ public class Rules {
                 validMovesList.add(new int[]{row-1, col-1});
 
             }
-            if (row-2<=7 && col+2<=7 && board.getPiece(row-1,col+1) != null && board.getPiece(row-1,col+1).getColor() == Pieces.Color.RED && board.getPiece(row-2,col+2) == null) {
+            if (row-2>=0 && col+2<=7 && board.getPiece(row-1,col+1) != null && board.getPiece(row-1,col+1).getColor() == Pieces.Color.RED && board.getPiece(row-2,col+2) == null) {
                 validMovesList.add(new int[]{row-2, col+2}); //add double up right
             }
-            if (row-2<=7 && col-2 >= 0 && board.getPiece(row-1,col-1) != null && board.getPiece(row-1,col-1).getColor() == Pieces.Color.RED && board.getPiece(row-2,col-2) == null) {
+            if (row-2>=0 && col-2 >= 0 && board.getPiece(row-1,col-1) != null && board.getPiece(row-1,col-1).getColor() == Pieces.Color.RED && board.getPiece(row-2,col-2) == null) {
                 validMovesList.add(new int[]{row-2, col-2}); //add double up left
             }
         }

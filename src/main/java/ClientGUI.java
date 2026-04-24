@@ -39,9 +39,10 @@ public class ClientGUI extends Application {
     private TextField usernameField, messageField, loginField;
     private Button sendButton, playButton, howtoplay, signinButton, messageButton, agreeChal, rejectChal, emojiButton, emojisButton;
     VBox clientList, loginVbox, chatVbox;
-    HBox userBox, messageBox;
+    HBox userBox, messageBox, topBar;
     Client clientConnection;
     Label loginLabel, userLabel,errormsg, userNameLabel;
+    Label turnLabel = new Label();
     String currentUser, opponent;
     BorderPane root;
     GridPane board;
@@ -51,6 +52,7 @@ public class ClientGUI extends Application {
     boolean pieceSelected = false;
     boolean inGame = false;
     String playerColor;
+    String currentTurn = "RED";
     int pCol, pRow, nRow, nCol;
     Pieces selectedPiece;
     boolean isSlidePaneOpen = true;
@@ -170,6 +172,7 @@ public class ClientGUI extends Application {
                         }
                     } else if (((Message) data).getMsgType().equals(Message.startGame)) {
                         inGame = true;
+                        currentTurn = "RED";
                         playerColor = ((Message) data).getMessage();
                         opponent= ((Message) data).getTarget() ;
                         sceneMap.put("game", createGameGUI(((Message) data).getTarget()));
@@ -364,7 +367,6 @@ public class ClientGUI extends Application {
         botBoard.setPrefHeight(10);
         botBoard.setMaxWidth(360);
         botBoard.setPadding(new Insets(0,0, 0 ,10));
-
         HBox topBar = new HBox(userNameLabel);
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setPrefHeight(10);
@@ -382,7 +384,8 @@ public class ClientGUI extends Application {
 
         HBox idk =  new HBox(10, resignButton);
         board = buildBoard();
-        VBox boardBox = new  VBox(topBoard,board,botBoard);
+        updateTurnIndicator();
+        VBox boardBox = new VBox(turnLabel,topBoard,board,botBoard);
         root.setCenter(boardBox);
         root.setRight(chatBox);
         root.setTop(topBar);
@@ -519,6 +522,12 @@ public class ClientGUI extends Application {
             }
             middleSquare.setUserData(null);
         }
+        if (currentTurn.equals("RED")) { //switch turns
+            currentTurn = "BLACK";
+        } else {
+            currentTurn = "RED";
+        }
+        updateTurnIndicator();
         return newSquare;
     }
 
@@ -639,5 +648,14 @@ public class ClientGUI extends Application {
         blackCircle.setStroke(Color.rgb(100, 100, 100));
         blackCircle.setStrokeWidth(4);
         return blackCircle;
+    }
+    private void updateTurnIndicator() {
+        if (currentTurn.equals("RED")) {
+            turnLabel.setText("Red's Turn");
+            turnLabel.setStyle("-fx-text-fill: rgb(168,43,43); -fx-font-size: 16px; -fx-font-weight: bold;");
+        } else {
+            turnLabel.setText("Black's Turn");
+            turnLabel.setStyle("-fx-text-fill: rgb(75,75,75); -fx-font-size: 16px; -fx-font-weight: bold;");
+        }
     }
 }
