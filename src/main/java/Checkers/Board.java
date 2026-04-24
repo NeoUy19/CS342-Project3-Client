@@ -6,6 +6,9 @@ public class Board {
 
     private Pieces.Color currentMove = Pieces.Color.RED;
 
+    public Board(Pieces[][] tempBoard) {
+        this.board = tempBoard;
+    }
     public Board() {
         this.setBoard();
     }

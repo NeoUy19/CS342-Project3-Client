@@ -1,7 +1,10 @@
 Checkers/Rules.class
 Client.class
 Checkers/Move.class
+Checkers/Pieces.class
 Message.class
 Checkers/Board.class
 ClientGUI.class
 ClientGUI$1.class
+Checkers/Pieces$PieceType.class
+Checkers/Pieces$Color.class

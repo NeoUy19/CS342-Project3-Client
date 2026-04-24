@@ -310,4 +310,49 @@ public class Rules {
         }
         return  false;
     }
+
+    public ArrayList<int[]> validMoves(int row, int col, Pieces.Color color){
+        ArrayList<int[]> validMovesList = new ArrayList<>();
+        if (color == Pieces.Color.RED) { //case for red pieces
+            if (row + 1 <= 7 && col + 1 <= 7 && board.getPiece(row+1, col+1) == null) { //single down right
+                validMovesList.add(new int[]{row+1, col+1});
+            }
+            if (row + 1 <= 7 && col - 1 >= 0 && board.getPiece(row+1, col-1) == null){ //single down left
+                validMovesList.add(new int[]{row+1, col-1});
+
+            }
+            if (row+2<=7 && col+2<=7 && board.getPiece(row+1,col+1) != null && board.getPiece(row+1,col+1).getColor() == Pieces.Color.BLACK && board.getPiece(row+2,col+2) == null) {
+                validMovesList.add(new int[]{row+2, col+2}); //add double down right
+            }
+            if (row+2<=7 && col-2 >= 0 && board.getPiece(row+1,col-1) != null && board.getPiece(row+1,col-1).getColor() == Pieces.Color.BLACK && board.getPiece(row+2,col-2) == null) {
+                validMovesList.add(new int[]{row+2, col-2}); //add double down left
+            }
+        }
+        else if (color == Pieces.Color.BLACK) {
+            if (row - 1 >= 0 && col + 1 <= 7 && board.getPiece(row-1, col+1) == null) { //single up right
+                validMovesList.add(new int[]{row-1, col+1});
+            }
+            if (row - 1 >= 0 && col - 1  >= 0 && board.getPiece(row-1, col-1) == null){ //single up left
+                validMovesList.add(new int[]{row-1, col-1});
+
+            }
+            if (row-2<=7 && col+2<=7 && board.getPiece(row-1,col+1) != null && board.getPiece(row-1,col+1).getColor() == Pieces.Color.RED && board.getPiece(row-2,col+2) == null) {
+                validMovesList.add(new int[]{row-2, col+2}); //add double up right
+            }
+            if (row-2<=7 && col-2 >= 0 && board.getPiece(row-1,col-1) != null && board.getPiece(row-1,col-1).getColor() == Pieces.Color.RED && board.getPiece(row-2,col-2) == null) {
+                validMovesList.add(new int[]{row-2, col-2}); //add double up left
+            }
+        }
+        boolean hasJump = false; //check for forced takes
+        for (int[] move : validMovesList) {
+            if (Math.abs(move[0] - row) == 2) {
+                hasJump = true;
+                break;
+            }
+        }
+        if (hasJump) {
+            validMovesList.removeIf(move -> Math.abs(move[0] - row) != 2);
+        }
+        return validMovesList;
+    }
 }

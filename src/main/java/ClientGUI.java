@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -52,6 +53,7 @@ public class ClientGUI extends Application {
     int pCol, pRow, nRow, nCol;
     Pieces selectedPiece;
     boolean isSlidePaneOpen = true;
+    Pieces[][] tempBoard = new  Pieces[8][8]; //create a temporary board that allows the highlight of possible places to move
 
     ListView<String> messagesList;
     public static void main(String[] args) {
@@ -447,6 +449,11 @@ public class ClientGUI extends Application {
         }
         oldSquare.setUserData(null);
         newSquare.setUserData(move.getPiece());
+        tempBoard[move.getnRow()][move.getnCol()] = move.getPiece();
+        tempBoard[move.getpRow()][move.getpCol()] = null;
+        if (isJump) {
+            tempBoard[midRow][midCol] = null;
+        }
         if (move.getPiece().getPieceType() == Pieces.PieceType.KING){
             if (move.getPiece().getColor() == Pieces.Color.RED){
                 Image redCrown = new Image(getClass().getResourceAsStream("/redCrown.png"));
@@ -489,23 +496,50 @@ public class ClientGUI extends Application {
             if (row < 3) {
                 square.getChildren().add(buildRedPiece());
                 square.setUserData(new Pieces(Pieces.Color.RED));
+                tempBoard[row][col] = new Pieces(Pieces.Color.RED);
+
             } else if (row > 4) {
                 square.getChildren().add(buildBlackPiece());
                 square.setUserData(new Pieces(Pieces.Color.BLACK));
+                tempBoard[row][col] = new Pieces(Pieces.Color.BLACK);
+
             }
         }
         square.setOnDragDetected(e -> {
             if (square.getUserData() != null &&
                     ((Pieces) square.getUserData()).getColor().toString().equals(playerColor)) {
+               Checkers.Board clientBoard = new Checkers.Board(tempBoard);
+               Checkers.Rules clientRules = new Checkers.Rules(clientBoard);
                 WritableImage pieceHeld = square.snapshot(null, null); //get the square clients click and drag
-                selectedPiece = (Pieces) square.getUserData();
                 Dragboard db = square.startDragAndDrop(TransferMode.MOVE);
                 db.setDragView(pieceHeld);
                 ClipboardContent content = new ClipboardContent();
                 content.putString(row + "," + col);
                 db.setContent(content);
+                selectedPiece = (Pieces) square.getUserData();
                 pRow = row;
                 pCol = col;
+
+                ArrayList<int[]> validMovesList = new ArrayList<>();
+                validMovesList = clientRules.validMoves(pRow, pCol, selectedPiece.getColor());
+                System.out.println("Valid moves count: " + validMovesList.size());
+                for (int[] m : validMovesList) {
+                    System.out.println("Valid move: row=" + m[0] + " col=" + m[1]);
+                }
+                System.out.println("Board children count: " + board.getChildren().size());
+                System.out.println("Valid moves: " + validMovesList.size());
+                for (Node n : board.getChildren()) {
+                    for (int[] c : validMovesList) {
+                        if (GridPane.getColumnIndex(n).equals(c[1]) && GridPane.getRowIndex(n).equals(c[0])) {
+                            StackPane s = (StackPane) n;
+                            Circle highlight = new Circle(15);
+                            highlight.setId("highlight");
+                            highlight.setFill(Color.rgb(255, 255, 255, 0.5));
+                            highlight.setEffect(new Glow(1.0));
+                            s.getChildren().add(highlight);
+                        }
+                    }
+                }
                 e.consume();
             }
         });
@@ -515,12 +549,26 @@ public class ClientGUI extends Application {
             }
             e.consume();
         });
-
+        square.setOnDragDone(e -> {
+            for (Node n : board.getChildren()) {
+                StackPane s = (StackPane) n;
+                s.getChildren().removeIf(child -> child instanceof Circle && "highlight".equals(child.getId()));
+            }
+            e.consume();
+        });
         square.setOnDragDropped(e -> {
             nRow = row;
             nCol = col;
             Move move = new Move(selectedPiece, pRow, pCol, nRow, nCol);
             clientConnection.send(move);
+            for (Node n : board.getChildren()) {
+                StackPane s = (StackPane) n;
+                if (s.getUserData() == null) {
+                    while (s.getChildren().size() > 1) {
+                        s.getChildren().remove(1);
+                    }
+                }
+            }
             e.setDropCompleted(true);
             e.consume();
         });
