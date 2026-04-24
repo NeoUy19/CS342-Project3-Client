@@ -37,7 +37,7 @@ public class ClientGUI extends Application {
     HashMap<String ,ListView<String>> chatListMap;
     HashMap<String, Button> playbuttonMap;
     private TextField usernameField, messageField, loginField;
-    private Button sendButton, playButton, howtoplay, signinButton, messageButton, agreeChal, rejectChal;
+    private Button sendButton, playButton, howtoplay, signinButton, messageButton, agreeChal, rejectChal, emojiButton, emojisButton;
     VBox clientList, loginVbox, chatVbox;
     HBox userBox, messageBox;
     Client clientConnection;
@@ -45,6 +45,7 @@ public class ClientGUI extends Application {
     String currentUser, opponent;
     BorderPane root;
     GridPane board;
+    FlowPane emojiPane;
     ScrollPane userPane, messagePane;
     Stage chatbox;
     boolean pieceSelected = false;
@@ -156,7 +157,8 @@ public class ClientGUI extends Application {
                         String currReceiver = ((Message) data).getClient();
                         if (primaryStage.getScene() == sceneMap.get("game"))
                         {
-                            messagesList.getItems().add(((Message) data).getClient() +": " + ((Message) data).getMessage());
+                            //messagesList.getItems().add(((Message) data).getClient() +": " + ((Message) data).getMessage());
+                            chatListMap.get(((Message) data).getClient()).getItems().add(((Message) data).getClient() +": " + ((Message) data).getMessage());
                             Platform.runLater(() -> messagesList.scrollTo(messagesList.getItems().size() - 1));
 
                         }
@@ -393,15 +395,55 @@ public class ClientGUI extends Application {
 
     private VBox buildChatBox(String target){
         messagesList = new ListView<String>();
+        chatListMap.put(target,messagesList);       //stores this message list with the user's name
         messageField = new TextField();
         messagePane = new ScrollPane(messagesList);
+        emojiPane = new FlowPane();
+        emojiPane.setVisible(false);
         sendButton = new Button("Send");
+        emojiButton = new Button("emoji");
 //        messagePane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); messagePane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         messagePane.setMaxHeight(300);
         messagePane.setStyle("-fx-background-color: transparent; -fx-vbar-policy: never;");
-        messageBox = new HBox(10, messageField, sendButton);
-        chatVbox = new VBox(10, messagePane, messageBox);
+        messageField.setPrefWidth(200);
+        messageBox = new HBox(10, messageField, sendButton, emojiButton);
+        chatVbox = new VBox(10, messagePane, emojiPane ,messageBox);
         chatVbox.setAlignment(Pos.CENTER);
+
+        Image laugh = new Image(getClass().getResourceAsStream("/laughingemoji.png"));
+        ImageView laughView = new ImageView(laugh);
+        laughView.setFitWidth(25);
+        laughView.setFitHeight(25);
+        Button laughBtn = new Button("");
+        laughBtn.setGraphic(laughView);
+
+        Image angry = new Image(getClass().getResourceAsStream("/angryemoji.png"));
+        ImageView angryView = new ImageView(angry);
+        angryView.setFitWidth(25);
+        angryView.setFitHeight(25);
+        Button angryBtn = new Button("");
+        angryBtn.setGraphic(angryView);
+
+        emojiPane.getChildren().add(laughBtn);
+        emojiPane.getChildren().add(angryBtn);
+
+        laughBtn.setOnAction(i ->{
+            Message currMessage = new Message(Message.sendToIndvidual, "😂", currentUser, target);
+            clientConnection.send(currMessage);
+            messagesList.getItems().add(currentUser + ": " + "😂");
+            Platform.runLater(() -> messagesList.scrollTo(messagesList.getItems().size() - 1));
+        });
+
+        angryBtn.setOnAction(o ->{
+            Message currMessage = new Message(Message.sendToIndvidual, "🤬", currentUser, target);
+            clientConnection.send(currMessage);
+            messagesList.getItems().add(currentUser + ": " + "🤬");
+            Platform.runLater(() -> messagesList.scrollTo(messagesList.getItems().size() - 1));
+        });
+
+        emojiButton.setOnAction(e->{
+            emojiPane.setVisible(!emojiPane.isVisible());
+        });
 
         sendButton.setOnAction(e->{
             Message currMessage = new Message(Message.sendToIndvidual, messageField.getText(), currentUser, target);    //Creates the message to individual
