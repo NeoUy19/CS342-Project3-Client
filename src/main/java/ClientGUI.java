@@ -86,6 +86,7 @@ public class ClientGUI extends Application {
                                 playButton.setGraphic(imageSword);
                                 playButton.setOnAction((event) -> {
                                     playButton.setDisable(true);
+                                    opponent = username;
                                     clientConnection.send(new Message(Message.challenge, "", currentUser, username));
                                 });
                                 Image message = new Image(getClass().getResourceAsStream("/message.png"));
@@ -179,7 +180,15 @@ public class ClientGUI extends Application {
                                 primaryStage.setScene(sceneMap.get("home"));
                             }
                             else {
-                                playbuttonMap.get(((Message) data).getClient()).setDisable(false);
+                                inGame = false;
+//                                primaryStage.setScene(sceneMap.get("home"));
+//                                String challengerName = ((Message) data).getClient();
+//                                if (!challengerName.equals(currentUser)) {
+//                                    playbuttonMap.get(opponent).setDisable(false);
+//                                }
+                                if (playbuttonMap.containsKey(opponent)) {
+                                    playbuttonMap.get(opponent).setDisable(false);
+                                }
                             }
                         }
                     }
