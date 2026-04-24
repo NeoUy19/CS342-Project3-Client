@@ -166,7 +166,7 @@ public class ClientGUI extends Application {
                         Alert giveplayerChoice = new Alert(Alert.AlertType.CONFIRMATION);
                         giveplayerChoice.setTitle("Game Challenge");
                         giveplayerChoice.getButtonTypes().setAll(ACCEPT, REJECT);
-                        giveplayerChoice.setHeaderText(((Message) data).getClient() + "Wants to play!");
+                        giveplayerChoice.setHeaderText(((Message) data).getClient() + " Wants to play!");
                         giveplayerChoice.setContentText("Do you accept?");
 
                         Optional<ButtonType> result = giveplayerChoice.showAndWait();
@@ -440,7 +440,7 @@ public class ClientGUI extends Application {
         emojiPane = new FlowPane();
         emojiPane.setVisible(false);
         sendButton = new Button("Send");
-        emojiButton = new Button("emoji");
+        emojiButton = new Button("");
 //        messagePane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); messagePane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         messagePane.setMaxHeight(300);
         messagePane.setStyle("-fx-background-color: transparent; -fx-vbar-policy: never;");
@@ -462,6 +462,12 @@ public class ClientGUI extends Application {
         angryView.setFitHeight(25);
         Button angryBtn = new Button("");
         angryBtn.setGraphic(angryView);
+
+        Image emoji = new Image(getClass().getResourceAsStream("/emojiface.png"));
+        ImageView emojiView = new ImageView(emoji);
+        emojiView.setFitWidth(20);
+        emojiView.setFitHeight(20);
+        emojiButton.setGraphic(emojiView);
 
         emojiPane.getChildren().add(laughBtn);
         emojiPane.getChildren().add(angryBtn);
