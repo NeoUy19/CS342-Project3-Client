@@ -50,7 +50,7 @@ public class ClientGUI extends Application {
     ScrollPane userPane, messagePane;
     Stage chatbox;
     boolean pieceSelected = false;
-    boolean inGame = false;
+    boolean inGame = false; //check if client is in game
     String playerColor;
     String currentTurn = "RED";
     int pCol, pRow, nRow, nCol;
@@ -117,12 +117,12 @@ public class ClientGUI extends Application {
                             primaryStage.setTitle("Client");
                             primaryStage.show();
                         }
-                    } else if (((Message) data).getMsgType().equals(Message.serverMessage)) {
-                        if (((Message) data).getMessage().contains("Wins!")) {
-                            ButtonType REMATCH = new ButtonType("rematch", ButtonBar.ButtonData.OK_DONE);
+                    } else if (((Message) data).getMsgType().equals(Message.serverMessage)) { //message from server
+                        if (((Message) data).getMessage().contains("Wins!")) { //case of winner
+                            ButtonType REMATCH = new ButtonType("rematch", ButtonBar.ButtonData.OK_DONE); //create new buttons
                             ButtonType HOME = new ButtonType("home",  ButtonBar.ButtonData.CANCEL_CLOSE);
                             Alert winner = new Alert(Alert.AlertType.CONFIRMATION);
-                            try {
+                            try { //when someone wins audio plays
                                 Media sound = new Media(getClass().getResource("/winning.mp3").toURI().toString());
                                 MediaPlayer mediaPlayer = new MediaPlayer(sound);
                                 mediaPlayer.play();
@@ -132,17 +132,17 @@ public class ClientGUI extends Application {
                             winner.setTitle("Winner!");
                             winner.getButtonTypes().setAll(REMATCH, HOME);
                             winner.setHeaderText(((Message) data).getMessage());
-                            Optional<ButtonType> result = winner.showAndWait();
+                            Optional<ButtonType> result = winner.showAndWait(); //wait for a click on one of the buttons
                             if (result.isPresent() && result.get() == REMATCH) {
                                     clientConnection.send(new Message(Message.challenge, "", currentUser, opponent));
                             }
-                            else if(result.isPresent() && result.get() == HOME) {
+                            else if(result.isPresent() && result.get() == HOME) { //if home is clicked
                                 inGame = false;
                                 primaryStage.setScene(sceneMap.get("home"));
                                 clientConnection.send(new Message(Message.challengeResponse, "Decline", currentUser, opponent));
                             }
                         }
-                        else if (((Message) data).getMessage().contains("Draw!")) {
+                        else if (((Message) data).getMessage().contains("Draw!")) { //cse that there is draw
                             Alert draw = new Alert(Alert.AlertType.CONFIRMATION);
                             ButtonType REMATCH = new ButtonType("rematch", ButtonBar.ButtonData.OK_DONE);
                             ButtonType HOME = new ButtonType("home",  ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -150,17 +150,17 @@ public class ClientGUI extends Application {
                             draw.getButtonTypes().setAll(REMATCH, HOME);
                             draw.setHeaderText(((Message) data).getMessage());
                             Optional<ButtonType> result = draw.showAndWait();
-                            if (result.isPresent() && result.get() == REMATCH) {
+                            if (result.isPresent() && result.get() == REMATCH) { //send challenge message if user clicks on rematch
                                 clientConnection.send(new Message(Message.challenge, "", currentUser, opponent));
                             }
-                            else if(result.isPresent() && result.get() == HOME) {
+                            else if(result.isPresent() && result.get() == HOME) { // go home if they click on home
                                 inGame = false;
                                 primaryStage.setScene(sceneMap.get("home"));
                                 clientConnection.send(new Message(Message.challengeResponse, "Decline", currentUser, opponent));
 
                             }
                         }
-                    } else if (((Message) data).getMsgType().equals(Message.challenge)) {
+                    } else if (((Message) data).getMsgType().equals(Message.challenge)) { //client recieves a challenge
                         ButtonType ACCEPT = new ButtonType("Accept", ButtonBar.ButtonData.OK_DONE);
                         ButtonType REJECT = new ButtonType("Reject", ButtonBar.ButtonData.CANCEL_CLOSE);
                         Alert giveplayerChoice = new Alert(Alert.AlertType.CONFIRMATION);
@@ -175,22 +175,22 @@ public class ClientGUI extends Application {
                         } else if (result.isPresent() && result.get() == REJECT) {
                             clientConnection.send(new Message(Message.challengeResponse, "Decline", currentUser, ((Message) data).getClient()));
                         }
-                    } else if (((Message) data).getMsgType().equals(Message.sendToIndvidual)) {
+                    } else if (((Message) data).getMsgType().equals(Message.sendToIndvidual)) { //sending messages
                         String currReceiver = ((Message) data).getClient();
-                        if (primaryStage.getScene() == sceneMap.get("game"))
+                        if (primaryStage.getScene() == sceneMap.get("game")) //if theyre in game pop up in chat
                         {
                             //messagesList.getItems().add(((Message) data).getClient() +": " + ((Message) data).getMessage());
                             chatListMap.get(((Message) data).getClient()).getItems().add(((Message) data).getClient() +": " + ((Message) data).getMessage());
                             Platform.runLater(() -> messagesList.scrollTo(messagesList.getItems().size() - 1));
 
                         }
-                        else {
+                        else { //pop up chat would want it to just be a different scene like DM's but no time
                             Stage currChat = chatsystem(currReceiver);
                             currChat.show();
                             chatListMap.get(currReceiver).getItems().add(currReceiver + ": " + ((Message) data).getMessage());  //receiver side
 
                         }
-                    } else if (((Message) data).getMsgType().equals(Message.startGame)) {
+                    } else if (((Message) data).getMsgType().equals(Message.startGame)) { //case that client accepts a challenge
                         inGame = true;
                         currentTurn = "RED";
                         playerColor = ((Message) data).getMessage();
@@ -198,21 +198,16 @@ public class ClientGUI extends Application {
                         sceneMap.put("game", createGameGUI(((Message) data).getTarget()));
                         primaryStage.setScene(sceneMap.get("game"));
 
-                    } else if(((Message) data).getMsgType().equals(Message.challengeResponse)){
-                        if(((Message) data).getMessage().equals("Accept")){
+                    } else if(((Message) data).getMsgType().equals(Message.challengeResponse)){ //target response to challenge
+                        if(((Message) data).getMessage().equals("Accept")){ //if game is accepted set the challenge button off
                             playbuttonMap.get(((Message) data).getTarget()).setDisable(false);
                         } else{
-                            if (primaryStage.getScene() == sceneMap.get("game")){
+                            if (primaryStage.getScene() == sceneMap.get("game")){ //if not accepted go back home if in game scene (rejecting a rematch)
                                 inGame = false;
                                 primaryStage.setScene(sceneMap.get("home"));
                             }
                             else {
                                 inGame = false;
-//                                primaryStage.setScene(sceneMap.get("home"));
-//                                String challengerName = ((Message) data).getClient();
-//                                if (!challengerName.equals(currentUser)) {
-//                                    playbuttonMap.get(opponent).setDisable(false);
-//                                }
                                 if (playbuttonMap.containsKey(opponent)) {
                                     playbuttonMap.get(opponent).setDisable(false);
                                 }
@@ -220,7 +215,7 @@ public class ClientGUI extends Application {
                         }
                     }
                 }
-                else if (data instanceof Move) {
+                else if (data instanceof Move) { //when other player moves also move in clients board
                     updateBoard((Move) data);
                 }
                 });
@@ -251,10 +246,8 @@ public class ClientGUI extends Application {
             }
         });
     }
-
+    /*Builds the home gui*/
     public Scene createHomeGUI(){
-        boolean open = false;
-        boolean close = true;
         userNameLabel = new Label();
         userNameLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #ffffff");
         Label homeUserLabel = new Label();
@@ -290,7 +283,7 @@ public class ClientGUI extends Application {
                 isSlidePaneOpen = false;
             }
             else{
-                userPaneSlide.setToX(5);
+                userPaneSlide.setToX(5); //slides to right, if it were 0 the button would also disappear
                 isSlidePaneOpen = true;
             }
             userPaneSlide.play();
@@ -511,7 +504,7 @@ public class ClientGUI extends Application {
         int midCol = (move.getpCol() + move.getnCol()) / 2;
         boolean isJump = Math.abs(move.getnRow() - move.getpRow()) == 2;
 
-        for (Node c : board.getChildren()){
+        for (Node c : board.getChildren()){ //go through the entire board and find old spots, new spots, and if there is a neef a take the middle square
             if (GridPane.getColumnIndex(c) == move.getpCol() && GridPane.getRowIndex(c) == move.getpRow()){
                 oldSquare = (StackPane) c;
             }
@@ -523,7 +516,7 @@ public class ClientGUI extends Application {
             }
         }
         Circle piece = null;
-        for (Node n : oldSquare.getChildren()) {
+        for (Node n : oldSquare.getChildren()) { //go through the children of the old square, and get the piece (circle)
             if (n instanceof Circle) {
                 piece = (Circle) n;
                 break;
@@ -531,28 +524,28 @@ public class ClientGUI extends Application {
         }
         newSquare.getChildren().add(piece);
         oldSquare.getChildren().remove(piece);
-        while (oldSquare.getChildren().size() > 1) {
+        while (oldSquare.getChildren().size() > 1) { //delete the circle in the old square
             oldSquare.getChildren().remove(1);
         }
         oldSquare.setUserData(null);
         newSquare.setUserData(move.getPiece());
-        tempBoard[move.getnRow()][move.getnCol()] = move.getPiece();
+        tempBoard[move.getnRow()][move.getnCol()] = move.getPiece(); //update the temporary board
         tempBoard[move.getpRow()][move.getpCol()] = null;
-        if (isJump) {
+        if (isJump) { //if piece is jumped set the taken piece to null
             tempBoard[midRow][midCol] = null;
         }
-        if (move.getPiece().getPieceType() == Pieces.PieceType.KING){
+        if (move.getPiece().getPieceType() == Pieces.PieceType.KING){ //case when red promotes
             if (move.getPiece().getColor() == Pieces.Color.RED){
                 Image redCrown = new Image(getClass().getResourceAsStream("/redCrown.png"));
                 ImageView crownView = new ImageView(redCrown);
                 crownView.setFitWidth(20);
                 crownView.setFitHeight(20);
-                if (playerColor.equals("RED")) {
+                if (playerColor.equals("RED")) { //rotate when the player is the red player
                     crownView.setRotate(180);
                 }
                 newSquare.getChildren().add(crownView);
             }
-            else if (move.getPiece().getColor() == Pieces.Color.BLACK){
+            else if (move.getPiece().getColor() == Pieces.Color.BLACK){ //case when black promotes
                 Image blackCrown = new Image(getClass().getResourceAsStream("/blackCrown.png"));
                 ImageView crownView = new ImageView(blackCrown);
                 crownView.setFitWidth(20);
@@ -561,7 +554,7 @@ public class ClientGUI extends Application {
             }
         }
 
-        if (isJump && middleSquare != null && middleSquare.getChildren().size() > 1) {
+        if (isJump && middleSquare != null && middleSquare.getChildren().size() > 1) { //normal takes case
             while (middleSquare.getChildren().size() > 1) {
                 middleSquare.getChildren().remove(1);
             }
@@ -601,9 +594,9 @@ public class ClientGUI extends Application {
 
             }
         }
+        /*Drag and drop section*/
         square.setOnDragDetected(e -> {
-            if (square.getUserData() != null &&
-                    ((Pieces) square.getUserData()).getColor().toString().equals(playerColor)) {
+            if (square.getUserData() != null && ((Pieces) square.getUserData()).getColor().toString().equals(playerColor)) {
                Checkers.Board clientBoard = new Checkers.Board(tempBoard);
                Checkers.Rules clientRules = new Checkers.Rules(clientBoard);
                 WritableImage pieceHeld = square.snapshot(null, null); //get the square clients click and drag
@@ -618,18 +611,13 @@ public class ClientGUI extends Application {
 
                 ArrayList<int[]> validMovesList = new ArrayList<>();
                 validMovesList = clientRules.validMoves(pRow, pCol, selectedPiece.getColor());
-                System.out.println("Valid moves count: " + validMovesList.size());
-                for (int[] m : validMovesList) {
-                    System.out.println("Valid move: row=" + m[0] + " col=" + m[1]);
-                }
-                System.out.println("Board children count: " + board.getChildren().size());
-                System.out.println("Valid moves: " + validMovesList.size());
-                for (Node n : board.getChildren()) {
-                    for (int[] c : validMovesList) {
-                        if (GridPane.getColumnIndex(n).equals(c[1]) && GridPane.getRowIndex(n).equals(c[0])) {
+                /*adds glow to all available moves*/
+                for (Node n : board.getChildren()) { //go through the board
+                    for (int[] c : validMovesList) { //go through all valid moves
+                        if (GridPane.getColumnIndex(n).equals(c[1]) && GridPane.getRowIndex(n).equals(c[0])) { //0 is rows and 1 is columns {row, column}
                             StackPane s = (StackPane) n;
                             Circle highlight = new Circle(15);
-                            highlight.setId("highlight");
+                            highlight.setId("highlight"); //create id for highlighted circle
                             highlight.setFill(Color.rgb(255, 255, 255, 0.5));
                             highlight.setEffect(new Glow(1.0));
                             s.getChildren().add(highlight);
@@ -645,21 +633,21 @@ public class ClientGUI extends Application {
             }
             e.consume();
         });
-        square.setOnDragDone(e -> {
+        square.setOnDragDone(e -> { //when user does not move a piece remove the possible moves
             for (Node n : board.getChildren()) {
                 StackPane s = (StackPane) n;
                 s.getChildren().removeIf(child -> child instanceof Circle && "highlight".equals(child.getId()));
             }
             e.consume();
         });
-        square.setOnDragDropped(e -> {
+        square.setOnDragDropped(e -> { //user makes a move
             nRow = row;
             nCol = col;
             Move move = new Move(selectedPiece, pRow, pCol, nRow, nCol);
             clientConnection.send(move);
             for (Node n : board.getChildren()) {
                 StackPane s = (StackPane) n;
-                if (s.getUserData() == null) {
+                if (s.getUserData() == null) { //remove circle from its original space
                     while (s.getChildren().size() > 1) {
                         s.getChildren().remove(1);
                     }
@@ -694,6 +682,7 @@ public class ClientGUI extends Application {
         blackCircle.setStrokeWidth(4);
         return blackCircle;
     }
+    /*When called it changes the color and tells whos turn it is*/
     private void updateTurnIndicator() {
         if (currentTurn.equals("RED")) {
             turnLabel.setText("Red's Turn");
